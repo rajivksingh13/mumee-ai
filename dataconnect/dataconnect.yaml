@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "mumee-ai"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "mumee-ai-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
