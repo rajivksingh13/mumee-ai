@@ -238,4 +238,164 @@ router.post('/welcome', async (req, res) => {
   }
 });
 
+// Enrollment email endpoint
+router.post('/enrollment', async (req, res) => {
+  try {
+    console.log('🎓 Enrollment email endpoint called at:', new Date().toISOString());
+    console.log('📨 Request headers:', req.headers);
+    console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
+    
+    const { email, courseTitle, coursePrice, paymentId, orderId, userName } = req.body;
+
+    console.log('🔍 Extracted data:', { email, courseTitle, coursePrice, paymentId, orderId, userName });
+
+    if (!email || !courseTitle || !userName) {
+      console.log('❌ Missing required fields:', { email, courseTitle, userName });
+      return res.status(400).json({ error: 'Email, courseTitle, and userName are required' });
+    }
+
+    console.log('✅ Validation passed, sending enrollment email to:', email);
+    console.log('📚 Course details:', { courseTitle, coursePrice, paymentId, orderId });
+
+    const subject = `Welcome to ${courseTitle} - Enrollment Confirmed!`;
+    console.log('📧 Email subject:', subject);
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Course Enrollment Confirmation</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f4f4f4;
+            }
+            .container {
+              background-color: #ffffff;
+              padding: 30px;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #4F46E5;
+            }
+            .logo {
+              font-size: 2.5em;
+              font-weight: bold;
+              color: #4F46E5;
+              margin: 0;
+            }
+            .subtitle {
+              color: #666;
+              margin-top: 5px;
+              font-size: 1.1em;
+            }
+            .success-text {
+              font-size: 1.2em;
+              color: #4F46E5;
+              margin-bottom: 20px;
+            }
+            .enrollment-details {
+              background-color: #f8f9fa;
+              padding: 20px;
+              border-radius: 8px;
+              margin: 20px 0;
+              border-left: 4px solid #4F46E5;
+            }
+            .button {
+              display: inline-block;
+              padding: 15px 30px;
+              background-color: #4F46E5;
+              color: white;
+              text-decoration: none;
+              border-radius: 6px;
+              margin: 20px 0;
+              font-weight: bold;
+              text-align: center;
+            }
+            .button:hover {
+              background-color: #4338ca;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 20px;
+              border-top: 1px solid #eee;
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 class="logo">🎓 mumeeAI</h1>
+              <p class="subtitle">Your Learning Journey Continues</p>
+            </div>
+            
+            <h2 class="success-text">Congratulations ${userName}!</h2>
+            <p>Your enrollment in <strong>${courseTitle}</strong> has been confirmed! We're excited to have you join this course and can't wait to see your progress.</p>
+            
+            <div class="enrollment-details">
+              <h3 style="color: #4F46E5; margin-top: 0;">Enrollment Details</h3>
+              <p><strong>Course:</strong> ${courseTitle}</p>
+              <p><strong>Amount Paid:</strong> ₹${coursePrice}</p>
+              <p><strong>Payment ID:</strong> ${paymentId}</p>
+              <p><strong>Order ID:</strong> ${orderId}</p>
+              <p><strong>Enrollment Date:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+
+            <h3 style="color: #4F46E5;">What's Next?</h3>
+            <ul>
+              <li>📚 Access your course materials</li>
+              <li>🎯 Start with the first lesson</li>
+              <li>📝 Complete assignments and quizzes</li>
+              <li>🏆 Earn your certificate</li>
+            </ul>
+
+            <p>Ready to start learning? Click the button below to access your course:</p>
+            <div style="text-align: center;">
+              <a href="https://mumee-ai.web.app/dashboard" class="button">Access Your Course</a>
+            </div>
+            
+            <p>If you have any questions about the course content or need technical support, our team is here to help. You can reach us at <strong>support@mumeeai.com</strong>.</p>
+            
+            <div class="footer">
+              <p>Best regards,<br><strong>The mumeeAI Team</strong></p>
+              <p>This is an automated message, please do not reply directly to this email.</p>
+              <p>To unsubscribe, click here: <a href="https://mumee-ai.web.app/unsubscribe">Unsubscribe</a></p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    console.log('📧 HTML email template generated, length:', html.length);
+    console.log('🚀 Calling sendEmail function...');
+    
+    await sendEmail(email, subject, html);
+    console.log('✅ Enrollment email sent successfully via sendEmail function');
+    
+    console.log('📤 Sending success response to client');
+    res.json({ message: 'Enrollment email sent successfully' });
+  } catch (error) {
+    console.error('❌ Error sending enrollment email:', error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    res.status(500).json({ 
+      error: 'Failed to send enrollment email',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router; 

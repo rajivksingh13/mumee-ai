@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { auth, database } from '../config/firebase';
 import { ref, get, set } from 'firebase/database';
-import { sendEnrollmentEmail } from '../utils/emailService';
+// Removed import - will use backend API instead
 
 interface Course {
   id?: string;
@@ -176,15 +176,33 @@ export default function CourseDetail() {
             };
             await set(enrollmentRef, enrollmentData);
 
-            // Send enrollment email
-            await sendEnrollmentEmail(
-              user.email || '',
-              course.title,
-              course.price,
-              verifyData.paymentId || response.razorpay_payment_id,
-              verifyData.orderId || response.razorpay_order_id,
-              user.displayName || 'User'
-            );
+            // Send enrollment email via backend
+            try {
+              console.log('Sending enrollment email...');
+              const emailResponse = await fetch('https://mumee-ai-backend.onrender.com/api/email/enrollment', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  email: user.email || '',
+                  courseTitle: course.title,
+                  coursePrice: course.price,
+                  paymentId: verifyData.paymentId || response.razorpay_payment_id,
+                  orderId: verifyData.orderId || response.razorpay_order_id,
+                  userName: user.displayName || 'User'
+                }),
+              });
+
+              if (emailResponse.ok) {
+                console.log('✅ Enrollment email sent successfully');
+              } else {
+                console.error('❌ Failed to send enrollment email');
+              }
+            } catch (emailError) {
+              console.error('❌ Error sending enrollment email:', emailError);
+              // Don't block enrollment if email fails
+            }
 
             // Show success message and redirect
             setSuccess('Payment successful! You have been enrolled in the course.');
