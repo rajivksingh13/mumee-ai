@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 // import { motion } from 'framer-motion';
 import { registerWithEmail, signInWithGoogle } from '../services/authService';
 import { auth } from '../config/firebase';
+import emailjs from '@emailjs/browser';
 
 const SignUp: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -30,23 +31,13 @@ const SignUp: React.FC = () => {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+    setLoading(true);
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setLoading(false);
       return;
     }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    if (accountType === 'admin' && adminCode !== 'ADMIN123') {
-      setError('Invalid admin code');
-      return;
-    }
-    
-    setLoading(true);
 
     try {
       if (!termsAccepted) {
@@ -57,6 +48,29 @@ const SignUp: React.FC = () => {
 
       const user = await registerWithEmail(email, password, displayName, accountType);
       if (user) {
+        // Send welcome email using EmailJS
+        try {
+          const templateParams = {
+            to_email: email,
+            to_name: displayName,
+            account_type: accountType,
+            registration_date: new Date().toLocaleDateString(),
+            dashboard_url: 'https://mumee-ai.web.app/dashboard'
+          };
+
+          await emailjs.send(
+            import.meta.env.VITE_EMAILJS_SERVICE_ID,
+            import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+            templateParams,
+            import.meta.env.VITE_EMAILJS_USER_ID
+          );
+          
+          console.log('Welcome email sent successfully via EmailJS');
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+          // Don't block signup if email fails
+        }
+        
         navigate('/dashboard');
       }
     } catch (error: any) {
