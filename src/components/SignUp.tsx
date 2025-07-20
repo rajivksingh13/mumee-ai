@@ -45,7 +45,7 @@ const SignUp: React.FC = () => {
         return;
       }
 
-      console.log('Starting signup process...');
+      console.log('Starting signup process here ...');
       const user = await registerWithEmail(email, password, displayName, accountType);
       console.log('registerWithEmail result:', user);
       
