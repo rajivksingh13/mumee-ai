@@ -67,24 +67,13 @@ router.post('/send', async (req, res) => {
 // Welcome email endpoint
 router.post('/welcome', async (req, res) => {
   try {
-    console.log('🎯 Welcome email endpoint called at:', new Date().toISOString());
-    console.log('📨 Request headers:', req.headers);
-    console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
-    
     const { email, userName, accountType } = req.body;
 
-    console.log('🔍 Extracted data:', { email, userName, accountType });
-
     if (!email || !userName) {
-      console.log('❌ Missing required fields:', { email, userName });
       return res.status(400).json({ error: 'Email and userName are required' });
     }
 
-    console.log('✅ Validation passed, sending welcome email to:', email);
-    console.log('👤 User details:', { userName, accountType });
-
     const subject = 'Welcome to mumeeAI - Your Account is Ready!';
-    console.log('📧 Email subject:', subject);
     
     const html = `
       <!DOCTYPE html>
@@ -220,17 +209,10 @@ router.post('/welcome', async (req, res) => {
       </html>
     `;
 
-    console.log('📧 HTML email template generated, length:', html.length);
-    console.log('🚀 Calling sendEmail function...');
-    
     await sendEmail(email, subject, html);
-    console.log('✅ Email sent successfully via sendEmail function');
-    
-    console.log('📤 Sending success response to client');
     res.json({ message: 'Welcome email sent successfully' });
   } catch (error) {
-    console.error('❌ Error sending welcome email:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error sending welcome email:', error);
     res.status(500).json({ 
       error: 'Failed to send welcome email',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -241,24 +223,13 @@ router.post('/welcome', async (req, res) => {
 // Enrollment email endpoint
 router.post('/enrollment', async (req, res) => {
   try {
-    console.log('🎓 Enrollment email endpoint called at:', new Date().toISOString());
-    console.log('📨 Request headers:', req.headers);
-    console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
-    
     const { email, courseTitle, coursePrice, paymentId, orderId, userName } = req.body;
 
-    console.log('🔍 Extracted data:', { email, courseTitle, coursePrice, paymentId, orderId, userName });
-
     if (!email || !courseTitle || !userName) {
-      console.log('❌ Missing required fields:', { email, courseTitle, userName });
       return res.status(400).json({ error: 'Email, courseTitle, and userName are required' });
     }
 
-    console.log('✅ Validation passed, sending enrollment email to:', email);
-    console.log('📚 Course details:', { courseTitle, coursePrice, paymentId, orderId });
-
     const subject = `Welcome to ${courseTitle} - Enrollment Confirmed!`;
-    console.log('📧 Email subject:', subject);
     
     const html = `
       <!DOCTYPE html>
@@ -380,17 +351,10 @@ router.post('/enrollment', async (req, res) => {
       </html>
     `;
 
-    console.log('📧 HTML email template generated, length:', html.length);
-    console.log('🚀 Calling sendEmail function...');
-    
     await sendEmail(email, subject, html);
-    console.log('✅ Enrollment email sent successfully via sendEmail function');
-    
-    console.log('📤 Sending success response to client');
     res.json({ message: 'Enrollment email sent successfully' });
   } catch (error) {
-    console.error('❌ Error sending enrollment email:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error sending enrollment email:', error);
     res.status(500).json({ 
       error: 'Failed to send enrollment email',
       details: error instanceof Error ? error.message : 'Unknown error'

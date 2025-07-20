@@ -5,8 +5,6 @@ import { registerWithEmail, signInWithGoogle } from '../services/authService';
 import { auth } from '../config/firebase';
 
 const SignUp: React.FC = () => {
-  console.log('🎯 SignUp component loaded!');
-  
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,11 +15,6 @@ const SignUp: React.FC = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  React.useEffect(() => {
-    console.log('🎯 SignUp component mounted!');
-    console.log('🎯 Component state:', { email, displayName, accountType, termsAccepted });
-  }, []);
 
   React.useEffect(() => {
     // Check if user is already logged in
@@ -35,7 +28,6 @@ const SignUp: React.FC = () => {
   }, [navigate]);
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
-    console.log('🚀 handleEmailSignUp function called!');
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -53,18 +45,11 @@ const SignUp: React.FC = () => {
         return;
       }
 
-      console.log('Starting signup process...');
-      console.log('Form data:', { email, displayName, accountType });
-      
       const user = await registerWithEmail(email, password, displayName, accountType);
-      console.log('registerWithEmail result:', user);
       
       if (user) {
-        console.log('User created successfully, sending email...');
-        
         // Send welcome email via backend
         try {
-          console.log('Calling email API...');
           const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
             method: 'POST',
             headers: {
@@ -77,28 +62,19 @@ const SignUp: React.FC = () => {
             }),
           });
 
-          console.log('Email API response status:', response.status);
-          
-          if (response.ok) {
-            const responseData = await response.json();
-            console.log('✅ Welcome email sent successfully:', responseData);
-          } else {
-            const errorData = await response.json();
-            console.error('❌ Email API error:', errorData);
+          if (!response.ok) {
+            console.error('Failed to send welcome email');
           }
         } catch (emailError) {
-          console.error('❌ Error sending welcome email:', emailError);
+          console.error('Error sending welcome email:', emailError);
           // Don't block signup if email fails
         }
         
-        console.log('Navigating to dashboard...');
         navigate('/dashboard');
       } else {
-        console.error('❌ User creation failed or returned null');
         setError('Failed to create account');
       }
     } catch (error: any) {
-      console.error('❌ Signup error:', error);
       setError(error.message || 'Failed to create account');
     } finally {
       setLoading(false);
@@ -106,28 +82,14 @@ const SignUp: React.FC = () => {
   };
 
   const handleGoogleSignUp = async () => {
-    console.log('🔍 Google signup started');
-    console.log('🔍 handleGoogleSignUp function called!');
     setError(null);
     setLoading(true);
 
     try {
-      console.log('Calling signInWithGoogle...');
       const user = await signInWithGoogle();
-      console.log('Google signup successful:', user);
-      console.log('User email:', user.email);
-      console.log('User displayName:', user.displayName);
       
       // Send welcome email for Google signup too
       try {
-        console.log('Sending welcome email for Google signup...');
-        console.log('Email API URL: https://mumee-ai-backend.onrender.com/api/email/welcome');
-        console.log('Email payload:', {
-          email: user.email,
-          userName: user.displayName || 'Google User',
-          accountType: 'individual'
-        });
-        
         const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
           method: 'POST',
           headers: {
@@ -140,24 +102,15 @@ const SignUp: React.FC = () => {
           }),
         });
 
-        console.log('Google signup email response status:', response.status);
-        console.log('Google signup email response headers:', response.headers);
-        
-        if (response.ok) {
-          const responseData = await response.json();
-          console.log('✅ Welcome email sent for Google signup:', responseData);
-        } else {
-          const errorData = await response.json();
-          console.error('❌ Google signup email error:', errorData);
+        if (!response.ok) {
+          console.error('Failed to send welcome email for Google signup');
         }
       } catch (emailError) {
-        console.error('❌ Error sending welcome email for Google signup:', emailError);
-        console.error('Email error details:', emailError);
+        console.error('Error sending welcome email for Google signup:', emailError);
       }
       
       navigate('/dashboard');
     } catch (err: any) {
-      console.error('❌ Google signup error:', err);
       setError(err.message || 'Failed to sign up with Google.');
     } finally {
       setLoading(false);
@@ -167,10 +120,6 @@ const SignUp: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-gray-800 p-10 rounded-xl shadow-2xl border border-gray-700">
-        {/* DEBUG INDICATOR */}
-        <div className="bg-red-500 text-white p-2 text-center font-bold">
-          🐛 DEBUG: This is the SignUp component with email functionality
-        </div>
         
         <div className="text-center">
           <Link to="/" className="inline-block">
@@ -180,20 +129,7 @@ const SignUp: React.FC = () => {
         </div>
         
         <form onSubmit={(e) => {
-          alert('Form submitted! Check console for details.');
-          console.log('📝 Form submitted!');
-          console.log('📝 Form event:', e);
-          console.log('📝 Form target:', e.target);
-          console.log('Form validation check:', {
-            email: !!email,
-            displayName: !!displayName,
-            password: !!password,
-            confirmPassword: !!confirmPassword,
-            passwordsMatch: password === confirmPassword,
-            termsAccepted: termsAccepted,
-            accountType: accountType
-          });
-          console.log('📝 About to call handleEmailSignUp...');
+          e.preventDefault();
           handleEmailSignUp(e);
         }} className="mt-8 space-y-6">
           {error && (
@@ -327,7 +263,6 @@ const SignUp: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              onClick={() => console.log('🔘 Submit button clicked!')}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Create Account'}
@@ -358,60 +293,6 @@ const SignUp: React.FC = () => {
                 <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               Continue with Google
-            </button>
-          </div>
-
-          {/* Temporary Test Button */}
-          <div className="mt-4">
-            <button
-              onClick={async () => {
-                try {
-                  console.log('🧪 Testing email functionality...');
-                  console.log('🧪 Current email:', email || 'test@example.com');
-                  console.log('🧪 Current displayName:', displayName || 'Test User');
-                  
-                  const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      email: email || 'test@example.com',
-                      userName: displayName || 'Test User',
-                      accountType: accountType || 'Individual'
-                    }),
-                  });
-                  
-                  console.log('🧪 Test email response status:', response.status);
-                  const data = await response.json();
-                  console.log('🧪 Test email response:', data);
-                  
-                  if (response.ok) {
-                    alert('✅ Test email sent successfully! Check your email.');
-                  } else {
-                    alert(`❌ Email failed: ${data.error || 'Unknown error'}`);
-                  }
-                } catch (error) {
-                  console.error('🧪 Test email error:', error);
-                  alert(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                }
-              }}
-              className="w-full flex items-center justify-center px-4 py-2 border border-yellow-600 rounded-lg shadow-sm text-sm font-medium text-yellow-400 bg-yellow-600/20 hover:bg-yellow-600/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-            >
-              🧪 Test Email Functionality
-            </button>
-          </div>
-
-          {/* Simple Component Test Button */}
-          <div className="mt-2">
-            <button
-              onClick={() => {
-                console.log('🔧 Component test button clicked!');
-                alert('🔧 Component is working! Check console for logs.');
-              }}
-              className="w-full flex items-center justify-center px-4 py-2 border border-green-600 rounded-lg shadow-sm text-sm font-medium text-green-400 bg-green-600/20 hover:bg-green-600/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              🔧 Test Component
             </button>
           </div>
         </div>
