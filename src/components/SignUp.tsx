@@ -46,17 +46,18 @@ const SignUp: React.FC = () => {
         return;
       }
 
-      console.log('Starting signup process beginning ...');
+      console.log('Starting signup process...');
+      console.log('Form data:', { email, displayName, accountType });
+      
       const user = await registerWithEmail(email, password, displayName, accountType);
       console.log('registerWithEmail result:', user);
       
       if (user) {
         console.log('User created successfully, sending email...');
+        
         // Send welcome email via backend
         try {
-          console.log('Starting email send process...');
-          console.log('Email data:', { email, userName: displayName, accountType });
-          
+          console.log('Calling email API...');
           const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
             method: 'POST',
             headers: {
@@ -70,25 +71,27 @@ const SignUp: React.FC = () => {
           });
 
           console.log('Email API response status:', response.status);
-          const responseData = await response.json();
-          console.log('Email API response data:', responseData);
-
+          
           if (response.ok) {
-            console.log('Welcome email sent successfully');
+            const responseData = await response.json();
+            console.log('✅ Welcome email sent successfully:', responseData);
           } else {
-            console.warn('Failed to send welcome email:', responseData);
+            const errorData = await response.json();
+            console.error('❌ Email API error:', errorData);
           }
         } catch (emailError) {
-          console.error('Error sending welcome email:', emailError);
+          console.error('❌ Error sending welcome email:', emailError);
           // Don't block signup if email fails
         }
         
         console.log('Navigating to dashboard...');
         navigate('/dashboard');
       } else {
-        console.log('User creation failed or returned null');
+        console.error('❌ User creation failed or returned null');
+        setError('Failed to create account');
       }
     } catch (error: any) {
+      console.error('❌ Signup error:', error);
       setError(error.message || 'Failed to create account');
     } finally {
       setLoading(false);
@@ -340,4 +343,4 @@ const SignUp: React.FC = () => {
   );
 };
 
-export default SignUp; 
+export default SignUp;
