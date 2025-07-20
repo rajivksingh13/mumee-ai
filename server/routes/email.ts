@@ -67,11 +67,18 @@ router.post('/send', async (req, res) => {
 // Welcome email endpoint
 router.post('/welcome', async (req, res) => {
   try {
+    console.log('Welcome email endpoint called');
+    console.log('Request body:', req.body);
+    
     const { email, userName, accountType } = req.body;
 
     if (!email || !userName) {
+      console.log('Missing required fields:', { email, userName });
       return res.status(400).json({ error: 'Email and userName are required' });
     }
+
+    console.log('Sending welcome email to:', email);
+    console.log('User details:', { userName, accountType });
 
     const subject = 'Welcome to mumeeAI - Your Account is Ready!';
     const html = `
@@ -208,11 +215,17 @@ router.post('/welcome', async (req, res) => {
       </html>
     `;
 
+    console.log('Calling sendEmail function...');
     await sendEmail(email, subject, html);
+    console.log('Email sent successfully via sendEmail function');
+    
     res.json({ message: 'Welcome email sent successfully' });
   } catch (error) {
     console.error('Error sending welcome email:', error);
-    res.status(500).json({ error: 'Failed to send welcome email' });
+    res.status(500).json({ 
+      error: 'Failed to send welcome email',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 

@@ -49,6 +49,9 @@ const SignUp: React.FC = () => {
       if (user) {
         // Send welcome email via backend
         try {
+          console.log('Starting email send process...');
+          console.log('Email data:', { email, userName: displayName, accountType });
+          
           const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
             method: 'POST',
             headers: {
@@ -61,10 +64,14 @@ const SignUp: React.FC = () => {
             }),
           });
 
+          console.log('Email API response status:', response.status);
+          const responseData = await response.json();
+          console.log('Email API response data:', responseData);
+
           if (response.ok) {
             console.log('Welcome email sent successfully');
           } else {
-            console.warn('Failed to send welcome email');
+            console.warn('Failed to send welcome email:', responseData);
           }
         } catch (emailError) {
           console.error('Error sending welcome email:', emailError);
