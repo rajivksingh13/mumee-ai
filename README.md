@@ -1,4 +1,4 @@
-# React + TypeScript + Vite
+# MumeeAI
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
@@ -51,4 +51,47 @@ export default tseslint.config({
     ...reactDom.configs.recommended.rules,
   },
 })
+```
+
+## CI/CD Pipeline Setup
+
+This project includes an automated CI/CD pipeline that builds and deploys to Firebase when changes are pushed to the `master` branch.
+
+### Prerequisites
+
+1. **Firebase CLI Token**: You need to generate a Firebase CLI token for automated deployment.
+
+### Setup Instructions
+
+1. **Generate Firebase CLI Token**:
+   ```bash
+   firebase login:ci
+   ```
+   This will open a browser window for authentication and output a token.
+
+2. **Add GitHub Secret**:
+   - Go to your GitHub repository
+   - Navigate to Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `FIREBASE_TOKEN`
+   - Value: Paste the token from step 1
+
+3. **Verify Setup**:
+   - Push any change to the `master` branch
+   - Check the Actions tab in your GitHub repository
+   - The workflow should automatically run and deploy to Firebase
+
+### What the Pipeline Does
+
+1. **Triggers**: Automatically runs on every push to the `master` branch
+2. **Build**: Installs dependencies and builds the React app
+3. **Deploy**: Deploys both hosting and functions to Firebase
+4. **Status**: You can monitor deployment status in the GitHub Actions tab
+
+### Manual Deployment
+
+If you need to deploy manually:
+```bash
+npm run build
+firebase deploy
 ```
