@@ -28,6 +28,7 @@ const SignUp: React.FC = () => {
   }, [navigate]);
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
+    console.log('🚀 handleEmailSignUp function called!');
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -119,7 +120,10 @@ const SignUp: React.FC = () => {
           <h3 className="text-xl font-medium text-gray-300">Create your account</h3>
         </div>
         
-        <form onSubmit={handleEmailSignUp} className="mt-8 space-y-6">
+        <form onSubmit={(e) => {
+          console.log('📝 Form submitted!');
+          handleEmailSignUp(e);
+        }} className="mt-8 space-y-6">
           {error && (
             <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg text-sm">
               {error}
@@ -251,6 +255,7 @@ const SignUp: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
+              onClick={() => console.log('🔘 Submit button clicked!')}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Create Account'}
