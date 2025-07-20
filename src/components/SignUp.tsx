@@ -45,8 +45,12 @@ const SignUp: React.FC = () => {
         return;
       }
 
+      console.log('Starting signup process...');
       const user = await registerWithEmail(email, password, displayName, accountType);
+      console.log('registerWithEmail result:', user);
+      
       if (user) {
+        console.log('User created successfully, sending email...');
         // Send welcome email via backend
         try {
           console.log('Starting email send process...');
@@ -78,7 +82,10 @@ const SignUp: React.FC = () => {
           // Don't block signup if email fails
         }
         
+        console.log('Navigating to dashboard...');
         navigate('/dashboard');
+      } else {
+        console.log('User creation failed or returned null');
       }
     } catch (error: any) {
       setError(error.message || 'Failed to create account');
@@ -274,6 +281,43 @@ const SignUp: React.FC = () => {
                 <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               Continue with Google
+            </button>
+          </div>
+
+          {/* Temporary Test Button */}
+          <div className="mt-4">
+            <button
+              onClick={async () => {
+                try {
+                  console.log('Testing email functionality...');
+                  const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      email: email || 'test@example.com',
+                      userName: displayName || 'Test User',
+                      accountType: accountType || 'Individual'
+                    }),
+                  });
+                  
+                  const data = await response.json();
+                  console.log('Test email response:', data);
+                  
+                  if (response.ok) {
+                    alert('✅ Test email sent successfully! Check your email.');
+                  } else {
+                    alert(`❌ Email failed: ${data.error || 'Unknown error'}`);
+                  }
+                } catch (error) {
+                  console.error('Test email error:', error);
+                  alert(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+              }}
+              className="w-full flex items-center justify-center px-4 py-2 border border-yellow-600 rounded-lg shadow-sm text-sm font-medium text-yellow-400 bg-yellow-600/20 hover:bg-yellow-600/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+            >
+              🧪 Test Email Functionality
             </button>
           </div>
         </div>
