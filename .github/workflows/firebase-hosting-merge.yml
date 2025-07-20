@@ -18,10 +18,10 @@ jobs:
           cache: 'npm'
 
       - name: Install main dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Firebase Functions dependencies
-        run: npm ci --prefix functions
+        run: npm install --prefix functions
 
       - name: Build the app
         run: npm run build
