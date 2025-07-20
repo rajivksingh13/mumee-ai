@@ -25,8 +25,11 @@ export const registerWithEmail = async (
   accountType: 'individual' | 'business' | 'enterprise' | 'admin'
 ) => {
   try {
+    console.log('🔧 registerWithEmail called with:', { email, displayName, accountType });
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    console.log('✅ Firebase user created:', user.uid);
 
     // Create user record in Firebase Realtime Database
     const userRef = ref(database, `users/${user.uid}`);
@@ -37,10 +40,11 @@ export const registerWithEmail = async (
       createdAt: Date.now(),
       lastLogin: Date.now()
     });
+    console.log('✅ User data saved to database');
 
     return user;
   } catch (error) {
-    console.error('Error in registerWithEmail:', error);
+    console.error('❌ Error in registerWithEmail:', error);
     throw error;
   }
 };

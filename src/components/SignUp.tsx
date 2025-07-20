@@ -5,16 +5,18 @@ import { registerWithEmail, signInWithGoogle } from '../services/authService';
 import { auth } from '../config/firebase';
 
 const SignUp: React.FC = () => {
+  console.log('🎯 SignUp component loaded!');
+  
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [accountType, setAccountType] = useState<'individual' | 'business' | 'enterprise' | 'admin'>('individual');
   const [adminCode, setAdminCode] = useState('');
-  const navigate = useNavigate();
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     // Check if user is already logged in
@@ -99,14 +101,46 @@ const SignUp: React.FC = () => {
   };
 
   const handleGoogleSignUp = async () => {
+    console.log('🔍 Google signup started');
     setError(null);
     setLoading(true);
 
     try {
-      await signInWithGoogle();
+      console.log('Calling signInWithGoogle...');
+      const user = await signInWithGoogle();
+      console.log('Google signup successful:', user);
+      
+      // Send welcome email for Google signup too
+      try {
+        console.log('Sending welcome email for Google signup...');
+        const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: user.email,
+            userName: user.displayName || 'Google User',
+            accountType: 'individual'
+          }),
+        });
+
+        console.log('Google signup email response status:', response.status);
+        
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log('✅ Welcome email sent for Google signup:', responseData);
+        } else {
+          const errorData = await response.json();
+          console.error('❌ Google signup email error:', errorData);
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending welcome email for Google signup:', emailError);
+      }
+      
       navigate('/dashboard');
     } catch (err: any) {
-      console.error('Google signup error:', err);
+      console.error('❌ Google signup error:', err);
       setError(err.message || 'Failed to sign up with Google.');
     } finally {
       setLoading(false);
@@ -116,6 +150,11 @@ const SignUp: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-gray-800 p-10 rounded-xl shadow-2xl border border-gray-700">
+        {/* DEBUG INDICATOR */}
+        <div className="bg-red-500 text-white p-2 text-center font-bold">
+          🐛 DEBUG: This is the SignUp component with email functionality
+        </div>
+        
         <div className="text-center">
           <Link to="/" className="inline-block">
             <h2 className="text-3xl font-extrabold text-white mb-2">MumeeAI</h2>
@@ -124,7 +163,17 @@ const SignUp: React.FC = () => {
         </div>
         
         <form onSubmit={(e) => {
+          alert('Form submitted! Check console for details.');
           console.log('📝 Form submitted!');
+          console.log('Form validation check:', {
+            email: !!email,
+            displayName: !!displayName,
+            password: !!password,
+            confirmPassword: !!confirmPassword,
+            passwordsMatch: password === confirmPassword,
+            termsAccepted: termsAccepted,
+            accountType: accountType
+          });
           handleEmailSignUp(e);
         }} className="mt-8 space-y-6">
           {error && (
