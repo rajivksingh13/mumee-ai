@@ -1,52 +1,28 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-// Create a transporter using Gmail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: true // Enable proper TLS verification
-  }
-});
-
-export const sendEmail = async (to: string, subject: string, html: string, headers?: Record<string, string>) => {
+// Simple email service using Resend.com
+export const sendEmail = async (to: string, subject: string, html: string): Promise<any> => {
   try {
-    // Create plain text version from HTML
-    const plainText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-
-    const mailOptions = {
-      from: {
-        name: 'mumeeAI',
-        address: process.env.EMAIL_USER || ''
-      },
-      to,
-      subject,
-      text: plainText, // Add plain text version
-      html,
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
       headers: {
-        'X-Mailer': 'mumeeAI',
-        'List-Unsubscribe': '<mailto:support@mumeeai.com>, <https://mumeeai.com/unsubscribe>',
-        'Precedence': 'normal', // Change from bulk to normal
-        'X-Priority': '1', // High priority
-        'X-MSMail-Priority': 'High',
-        ...headers
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
       },
-      dkim: {
-        domainName: 'mumeeai.com',
-        keySelector: 'default',
-        privateKey: process.env.DKIM_PRIVATE_KEY || ''
-      }
-    };
+      body: JSON.stringify({
+        from: 'mumeeAI <onboarding@resend.dev>', // Use Resend's test domain
+        to: [to],
+        subject: subject,
+        html: html,
+      }),
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.messageId);
-    return info;
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Email service error: ${error}`);
+    }
+
+    const result = await response.json();
+    console.log('Email sent successfully:', result.id);
+    return result;
   } catch (error) {
     console.error('Error sending email:', error);
     throw error;
