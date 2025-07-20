@@ -19,6 +19,11 @@ const SignUp: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
+    console.log('🎯 SignUp component mounted!');
+    console.log('🎯 Component state:', { email, displayName, accountType, termsAccepted });
+  }, []);
+
+  React.useEffect(() => {
     // Check if user is already logged in
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -102,6 +107,7 @@ const SignUp: React.FC = () => {
 
   const handleGoogleSignUp = async () => {
     console.log('🔍 Google signup started');
+    console.log('🔍 handleGoogleSignUp function called!');
     setError(null);
     setLoading(true);
 
@@ -109,10 +115,19 @@ const SignUp: React.FC = () => {
       console.log('Calling signInWithGoogle...');
       const user = await signInWithGoogle();
       console.log('Google signup successful:', user);
+      console.log('User email:', user.email);
+      console.log('User displayName:', user.displayName);
       
       // Send welcome email for Google signup too
       try {
         console.log('Sending welcome email for Google signup...');
+        console.log('Email API URL: https://mumee-ai-backend.onrender.com/api/email/welcome');
+        console.log('Email payload:', {
+          email: user.email,
+          userName: user.displayName || 'Google User',
+          accountType: 'individual'
+        });
+        
         const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
           method: 'POST',
           headers: {
@@ -126,6 +141,7 @@ const SignUp: React.FC = () => {
         });
 
         console.log('Google signup email response status:', response.status);
+        console.log('Google signup email response headers:', response.headers);
         
         if (response.ok) {
           const responseData = await response.json();
@@ -136,6 +152,7 @@ const SignUp: React.FC = () => {
         }
       } catch (emailError) {
         console.error('❌ Error sending welcome email for Google signup:', emailError);
+        console.error('Email error details:', emailError);
       }
       
       navigate('/dashboard');
@@ -165,6 +182,8 @@ const SignUp: React.FC = () => {
         <form onSubmit={(e) => {
           alert('Form submitted! Check console for details.');
           console.log('📝 Form submitted!');
+          console.log('📝 Form event:', e);
+          console.log('📝 Form target:', e.target);
           console.log('Form validation check:', {
             email: !!email,
             displayName: !!displayName,
@@ -174,6 +193,7 @@ const SignUp: React.FC = () => {
             termsAccepted: termsAccepted,
             accountType: accountType
           });
+          console.log('📝 About to call handleEmailSignUp...');
           handleEmailSignUp(e);
         }} className="mt-8 space-y-6">
           {error && (
@@ -346,7 +366,10 @@ const SignUp: React.FC = () => {
             <button
               onClick={async () => {
                 try {
-                  console.log('Testing email functionality...');
+                  console.log('🧪 Testing email functionality...');
+                  console.log('🧪 Current email:', email || 'test@example.com');
+                  console.log('🧪 Current displayName:', displayName || 'Test User');
+                  
                   const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
                     method: 'POST',
                     headers: {
@@ -359,8 +382,9 @@ const SignUp: React.FC = () => {
                     }),
                   });
                   
+                  console.log('🧪 Test email response status:', response.status);
                   const data = await response.json();
-                  console.log('Test email response:', data);
+                  console.log('🧪 Test email response:', data);
                   
                   if (response.ok) {
                     alert('✅ Test email sent successfully! Check your email.');
@@ -368,13 +392,26 @@ const SignUp: React.FC = () => {
                     alert(`❌ Email failed: ${data.error || 'Unknown error'}`);
                   }
                 } catch (error) {
-                  console.error('Test email error:', error);
+                  console.error('🧪 Test email error:', error);
                   alert(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 }
               }}
               className="w-full flex items-center justify-center px-4 py-2 border border-yellow-600 rounded-lg shadow-sm text-sm font-medium text-yellow-400 bg-yellow-600/20 hover:bg-yellow-600/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
             >
               🧪 Test Email Functionality
+            </button>
+          </div>
+
+          {/* Simple Component Test Button */}
+          <div className="mt-2">
+            <button
+              onClick={() => {
+                console.log('🔧 Component test button clicked!');
+                alert('🔧 Component is working! Check console for logs.');
+              }}
+              className="w-full flex items-center justify-center px-4 py-2 border border-green-600 rounded-lg shadow-sm text-sm font-medium text-green-400 bg-green-600/20 hover:bg-green-600/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              🔧 Test Component
             </button>
           </div>
         </div>
