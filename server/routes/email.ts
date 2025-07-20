@@ -3,6 +3,50 @@ import { sendEmail } from '../utils/emailService';
 
 const router = express.Router();
 
+// Test endpoint to check API key configuration
+router.get('/test-config', async (req, res) => {
+  try {
+    const apiKey = process.env.RESEND_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(500).json({ 
+        error: 'API key not configured',
+        message: 'RESEND_API_KEY environment variable is not set'
+      });
+    }
+
+    // Test the API key by making a simple request to Resend
+    const response = await fetch('https://api.resend.com/domains', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    });
+
+    if (response.ok) {
+      const domains = await response.json();
+      res.json({ 
+        success: true,
+        message: 'API key is working',
+        domains: domains.data || [],
+        apiKeyConfigured: true
+      });
+    } else {
+      const error = await response.text();
+      res.status(400).json({ 
+        error: 'API key is invalid',
+        message: error,
+        apiKeyConfigured: true
+      });
+    }
+  } catch (error) {
+    console.error('Config test failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to test configuration',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // General email endpoint for other email functionality
 router.post('/send', async (req, res) => {
   try {
