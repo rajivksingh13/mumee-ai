@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 // import { motion } from 'framer-motion';
 import { registerWithEmail, signInWithGoogle } from '../services/authService';
 import { auth } from '../config/firebase';
+import { buildApiUrl, API_CONFIG } from '../config/api';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,10 +23,9 @@ const SignUp: React.FC = () => {
     // Check if user is already logged in
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        navigate('/dashboard');
+        navigate(redirectTo);
       }
     });
-
     return () => unsubscribe();
   }, [navigate]);
 
@@ -46,11 +48,10 @@ const SignUp: React.FC = () => {
       }
 
       const user = await registerWithEmail(email, password, displayName, accountType);
-      
       if (user) {
         // Send welcome email via backend
         try {
-          const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
+          const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -61,16 +62,13 @@ const SignUp: React.FC = () => {
               accountType: accountType
             }),
           });
-
           if (!response.ok) {
             console.error('Failed to send welcome email');
           }
         } catch (emailError) {
           console.error('Error sending welcome email:', emailError);
-          // Don't block signup if email fails
         }
-        
-        navigate('/dashboard');
+        // User is already logged in, redirect will happen via useEffect
       } else {
         setError('Failed to create account');
       }
@@ -90,7 +88,7 @@ const SignUp: React.FC = () => {
       
       // Send welcome email for Google signup too
       try {
-        const response = await fetch('https://mumee-ai-backend.onrender.com/api/email/welcome', {
+        const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -109,7 +107,7 @@ const SignUp: React.FC = () => {
         console.error('Error sending welcome email for Google signup:', emailError);
       }
       
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up with Google.');
     } finally {
@@ -118,28 +116,25 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-gray-800 p-10 rounded-xl shadow-2xl border border-gray-700">
-        
+    <div className="min-h-screen bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-gradient-to-br from-white/70 to-blue-100/60 border border-blue-100 border-t border-white/40 p-10 rounded-2xl shadow-2xl backdrop-blur-2xl">
         <div className="text-center">
           <Link to="/" className="inline-block">
-            <h2 className="text-3xl font-extrabold text-white mb-2">MumeeAI</h2>
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2">titliAI</h2>
           </Link>
-          <h3 className="text-xl font-medium text-gray-300">Create your account</h3>
+          <h3 className="text-xl font-medium text-gray-700">Create your account</h3>
         </div>
-        
         <form onSubmit={(e) => {
           e.preventDefault();
           handleEmailSignUp(e);
         }} className="mt-8 space-y-6">
           {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
-          
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
               Full Name
             </label>
             <input
@@ -149,28 +144,25 @@ const SignUp: React.FC = () => {
               required
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
             />
           </div>
-
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email address
             </label>
             <input
               id="email"
               name="email"
               type="email"
-              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
             />
           </div>
-
           <div>
-            <label htmlFor="accountType" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="accountType" className="block text-sm font-medium text-gray-700">
               Account Type
             </label>
             <select
@@ -178,7 +170,7 @@ const SignUp: React.FC = () => {
               name="accountType"
               value={accountType}
               onChange={(e) => setAccountType(e.target.value as 'individual' | 'business' | 'enterprise' | 'admin')}
-              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
             >
               <option value="individual">Individual</option>
               <option value="business">Business</option>
@@ -186,10 +178,9 @@ const SignUp: React.FC = () => {
               <option value="admin">Admin</option>
             </select>
           </div>
-
           {accountType === 'admin' && (
             <div>
-              <label htmlFor="adminCode" className="block text-sm font-medium text-gray-300">
+              <label htmlFor="adminCode" className="block text-sm font-medium text-gray-700">
                 Admin Code
               </label>
               <input
@@ -199,44 +190,39 @@ const SignUp: React.FC = () => {
                 required
                 value={adminCode}
                 onChange={(e) => setAdminCode(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
                 placeholder="Enter admin code"
               />
             </div>
           )}
-
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
               id="password"
               name="password"
               type="password"
-              autoComplete="new-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
             />
           </div>
-
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
               Confirm Password
             </label>
             <input
               id="confirmPassword"
               name="confirmPassword"
               type="password"
-              autoComplete="new-password"
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
             />
           </div>
-
           <div className="flex items-center">
             <input
               id="terms"
@@ -245,46 +231,43 @@ const SignUp: React.FC = () => {
               required
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-400 border-blue-300 rounded bg-white"
             />
-            <label htmlFor="terms" className="ml-2 block text-sm text-gray-300">
+            <label htmlFor="terms" className="ml-2 block text-sm text-gray-600">
               I agree to the{' '}
-              <Link to="/terms" className="text-indigo-400 hover:text-indigo-300">
+              <Link to="/terms" className="text-blue-600 hover:text-blue-500">
                 Terms of Service
               </Link>
               {' '}and{' '}
-              <Link to="/privacy" className="text-indigo-400 hover:text-indigo-300">
+              <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
                 Privacy Policy
               </Link>
             </label>
           </div>
-
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </div>
         </form>
-
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
+              <div className="w-full border-t border-blue-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+              <span className="px-2 bg-white text-blue-600 font-semibold shadow-sm">Or continue with</span>
             </div>
           </div>
-
           <div className="mt-6">
             <button
               onClick={handleGoogleSignUp}
               disabled={loading}
-              className="w-full flex items-center justify-center px-4 py-2 border border-gray-700 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-700/50 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center px-4 py-2 border border-blue-400 rounded-lg shadow-md text-sm font-semibold text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -296,11 +279,10 @@ const SignUp: React.FC = () => {
             </button>
           </div>
         </div>
-
         <div className="text-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500">
             Already have an account?{' '}
-            <Link to="/login" className="font-medium text-indigo-400 hover:text-indigo-300">
+            <Link to={`/login?redirect=${encodeURIComponent(redirectTo)}`} className="font-medium text-blue-600 hover:text-blue-500">
               Sign in
             </Link>
           </p>

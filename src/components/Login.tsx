@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { loginWithEmail, signInWithGoogle } from '../services/authService';
+import { buildApiUrl, API_CONFIG } from '../config/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,8 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/account';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +20,7 @@ const Login: React.FC = () => {
 
     try {
       await loginWithEmail(email, password);
-      navigate('/dashboard');
+      navigate(redirectTo);
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to login. Please check your credentials.');
@@ -31,8 +34,24 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await signInWithGoogle();
-      navigate('/dashboard');
+      const user = await signInWithGoogle();
+      // Check if user is new (first login)
+      if (user && user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime) {
+        try {
+          await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: user.email,
+              userName: user.displayName || 'Google User',
+              accountType: 'individual',
+            }),
+          });
+        } catch (emailError) {
+          console.error('Error sending welcome email for Google login:', emailError);
+        }
+      }
+      navigate(redirectTo);
     } catch (err: any) {
       console.error('Google login error:', err);
       setError(err.message || 'Failed to login with Google.');
@@ -42,28 +61,28 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md w-full space-y-8 bg-gray-800 p-10 rounded-xl shadow-2xl border border-gray-700"
+        className="max-w-md w-full space-y-8 bg-gradient-to-br from-white/70 to-blue-100/60 border border-blue-100 border-t border-white/40 p-10 rounded-2xl shadow-2xl backdrop-blur-2xl"
       >
         <div className="text-center">
           <Link to="/" className="inline-block">
-            <h2 className="text-3xl font-extrabold text-white mb-2">MumeeAI</h2>
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2">titliAI</h2>
           </Link>
-          <h3 className="text-xl font-medium text-gray-300">Sign in to your account</h3>
-          <p className="mt-2 text-sm text-gray-400">
+          <h3 className="text-xl font-medium text-gray-700">Sign in to your account</h3>
+          <p className="mt-2 text-sm text-gray-500">
             Or{' '}
-            <Link to="/signup" className="font-medium text-indigo-400 hover:text-indigo-300">
+            <Link to={`/signup?redirect=${encodeURIComponent(redirectTo)}`} className="font-medium text-blue-600 hover:text-blue-500">
               create a new account
             </Link>
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg text-sm">
+          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -78,11 +97,10 @@ const Login: React.FC = () => {
                 id="email-address"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-t-lg relative block w-full px-3 py-2 border border-gray-700 bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-t-lg relative block w-full px-3 py-2 border border-blue-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:z-10 sm:text-sm font-medium shadow"
                 placeholder="Email address"
               />
             </div>
@@ -94,11 +112,10 @@ const Login: React.FC = () => {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-b-lg relative block w-full px-3 py-2 border border-gray-700 bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-b-lg relative block w-full px-3 py-2 border border-blue-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:z-10 sm:text-sm font-medium shadow"
                 placeholder="Password"
               />
             </div>
@@ -110,15 +127,15 @@ const Login: React.FC = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-700 rounded bg-gray-700/50"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-400 border-blue-100 rounded bg-white/60 backdrop-blur"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600">
                 Remember me
               </label>
             </div>
 
             <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-indigo-400 hover:text-indigo-300">
+              <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                 Forgot your password?
               </Link>
             </div>
@@ -128,7 +145,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed shadow"
             >
               {loading ? (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
@@ -146,10 +163,10 @@ const Login: React.FC = () => {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
+              <div className="w-full border-t border-blue-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+              <span className="px-2 bg-white text-blue-600 font-semibold shadow-sm">Or continue with</span>
             </div>
           </div>
 
@@ -157,7 +174,7 @@ const Login: React.FC = () => {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center px-4 py-2 border border-gray-700 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-700/50 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center px-4 py-2 border border-blue-400 rounded-lg shadow-md text-sm font-semibold text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path

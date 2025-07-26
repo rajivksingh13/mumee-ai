@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider, 
   signInWithPopup,
   sendPasswordResetEmail
+  // sendEmailVerification (removed)
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { ref, set } from 'firebase/database';
@@ -25,11 +26,10 @@ export const registerWithEmail = async (
   accountType: 'individual' | 'business' | 'enterprise' | 'admin'
 ) => {
   try {
-    console.log('🔧 registerWithEmail called with:', { email, displayName, accountType });
-    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    console.log('✅ Firebase user created:', user.uid);
+
+    // No email verification step
 
     // Create user record in Firebase Realtime Database
     const userRef = ref(database, `users/${user.uid}`);
@@ -40,12 +40,14 @@ export const registerWithEmail = async (
       createdAt: Date.now(),
       lastLogin: Date.now()
     });
-    console.log('✅ User data saved to database');
 
     return user;
-  } catch (error) {
-    console.error('❌ Error in registerWithEmail:', error);
-    throw error;
+  } catch (error: any) {
+    let message = 'Failed to create account.';
+    if (error.code === 'auth/email-already-in-use') message = 'Email is already in use.';
+    else if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
+    else if (error.code === 'auth/weak-password') message = 'Password is too weak.';
+    throw new Error(message);
   }
 };
 
@@ -60,14 +62,21 @@ export const loginWithEmail = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Update last login time
-    const userRef = ref(database, `users/email/${user.uid}/lastLogin`);
+    // Update last login time (correct path)
+    const userRef = ref(database, `users/${user.uid}/lastLogin`);
     await set(userRef, new Date().toISOString());
 
+    // Optionally, check if email is verified
+    // if (!user.emailVerified) throw new Error('Please verify your email before logging in.');
+
     return user;
-  } catch (error) {
-    console.error('Error in loginWithEmail:', error);
-    throw error;
+  } catch (error: any) {
+    let message = 'Failed to sign in.';
+    if (error.code === 'auth/user-not-found') message = 'No account found with this email.';
+    else if (error.code === 'auth/wrong-password') message = 'Incorrect password.';
+    else if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
+    else if (error.code === 'auth/user-disabled') message = 'This account has been disabled.';
+    throw new Error(message);
   }
 };
 
@@ -82,7 +91,7 @@ export const signInWithGoogle = async () => {
     const user = userCredential.user;
 
     // Create or update user record in Firebase Realtime Database
-    const userRef = ref(database, `users/email/${user.uid}`);
+    const userRef = ref(database, `users/${user.uid}`);
     await set(userRef, {
       email: user.email,
       displayName: user.displayName,
@@ -90,9 +99,10 @@ export const signInWithGoogle = async () => {
     });
 
     return user;
-  } catch (error) {
-    console.error('Error in signInWithGoogle:', error);
-    throw error;
+  } catch (error: any) {
+    let message = 'Failed to sign in with Google.';
+    if (error.code === 'auth/popup-closed-by-user') message = 'Google sign-in was cancelled.';
+    throw new Error(message);
   }
 };
 
@@ -117,8 +127,10 @@ export const logout = async () => {
 export const resetPassword = async (email: string) => {
   try {
     await sendPasswordResetEmail(auth, email);
-  } catch (error) {
-    console.error('Error in resetPassword:', error);
-    throw error;
+  } catch (error: any) {
+    let message = 'Failed to send password reset email.';
+    if (error.code === 'auth/user-not-found') message = 'No account found with this email.';
+    else if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
+    throw new Error(message);
   }
 }; 

@@ -20,14 +20,11 @@ jobs:
       - name: Install main dependencies
         run: npm install
 
-      - name: Install Firebase Functions dependencies
-        run: npm install --prefix functions
-
       - name: Build the app
         run: npm run build
 
-      - name: Deploy to Firebase
+      - name: Deploy to Firebase Hosting
         run: |
-          npx firebase deploy --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
+          npx firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

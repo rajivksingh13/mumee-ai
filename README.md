@@ -2,6 +2,32 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Environment Configuration
+
+To configure the application for different environments (development vs production), create a `.env` file in the root directory with the following variables:
+
+```env
+# API Configuration
+# Set this to your Render backend URL in production
+VITE_API_BASE_URL=https://your-backend-service.onrender.com
+
+# Firebase Configuration (if not already configured)
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+
+# Razorpay Configuration
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
+```
+
+### Development vs Production
+
+- **Development**: The app will use `http://localhost:3000` as the default backend URL
+- **Production**: Set `VITE_API_BASE_URL` to your Render backend service URL
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh

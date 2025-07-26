@@ -13,7 +13,7 @@ export const sendEmail = async (to: string, subject: string, html: string): Prom
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'mumeeAI <hello@teachlea.com>', // Try with your domain
+        from: 'titliAI <hello@teachlea.com>', // Try with your domain
         to: [to],
         subject: subject,
         html: html,
@@ -34,7 +34,7 @@ export const sendEmail = async (to: string, subject: string, html: string): Prom
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'mumeeAI <onboarding@resend.dev>', // Fallback to test domain
+            from: 'titliAI <onboarding@resend.dev>', // Fallback to test domain
             to: [to],
             subject: subject,
             html: html,

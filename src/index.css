@@ -2,8 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import a modern font for the site */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+body {
+  font-family: 'Inter', 'Poppins', 'Roboto', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+/* You can further customize colors and branding in tailwind.config.js */
 @layer base {
   body {
     @apply bg-gray-50;
+  }
+}
+
+/* Line clamp utility for search results */
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 } 
