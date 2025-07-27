@@ -10,15 +10,44 @@ const app = express();
 
 // Enable CORS for your frontend
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://mumee-ai.web.app', 'https://mumee-ai.firebaseapp.com']
-    : 'http://localhost:5173', // Your Vite dev server
-  methods: ['GET', 'POST'],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://mumee-ai.web.app', 
+      'https://mumee-ai.firebaseapp.com',
+      'https://titliai.com',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
+
+// Add preflight handling
+app.options('*', cors());
 
 // Middleware
 app.use(express.json());
+
+// Test CORS endpoint
+app.get('/api/test-cors', (req, res) => {
+  res.json({ 
+    message: 'CORS is working!', 
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Routes
 app.use('/api/payment', paymentRoutes);

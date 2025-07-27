@@ -127,10 +127,6 @@ const Navbar: React.FC = () => {
           )}
         </div>
         <div className="md:hidden flex items-center">
-          <Link to="/" className="flex items-center text-xl font-extrabold text-white gap-2 mr-4">
-            <ButterflyLogo size="sm" />
-            <span>titliAI</span>
-          </Link>
           <button onClick={() => setOpen(!open)} className="text-gray-200 focus:outline-none">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               {open ? (

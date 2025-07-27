@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { buildApiUrl, API_CONFIG } from '../config/api';
 
 const beginnerTopics = [
   {
@@ -81,11 +82,34 @@ const BeginnerWorkshop: React.FC = () => {
       // Simulate enrollment process
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Here you would typically make an API call to enroll the user
-      // For now, we'll just show success
+      // Send enrollment email via backend (similar to Foundation Workshop)
+      try {
+        const emailResponse = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.ENROLLMENT), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user?.email || '',
+            courseTitle: WORKSHOP_TITLE,
+            coursePrice: 0, // Free workshop
+            paymentId: 'FREE_ENROLLMENT',
+            orderId: `free_${Date.now()}`,
+            userName: user?.displayName || 'User',
+          }),
+        });
+        if (emailResponse.ok) {
+          console.log('✅ Enrollment email sent successfully');
+        } else {
+          console.error('❌ Failed to send enrollment email');
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending enrollment email:', emailError);
+        // Don't block enrollment if email fails
+      }
+      
+      // Show success
       setEnrollmentSuccess(true);
       
-      // You could also store enrollment in localStorage or make an API call
+      // Store enrollment in localStorage
       localStorage.setItem(`enrolled_${WORKSHOP_ID}`, 'true');
       
     } catch (error) {

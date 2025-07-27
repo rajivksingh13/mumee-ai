@@ -194,6 +194,7 @@ const FoundationWorkshop: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
 
   // Razorpay payment handler
   const handlePayment = async () => {
@@ -285,6 +286,7 @@ const FoundationWorkshop: React.FC = () => {
             }
             // Enrollment logic (could add to DB here)
             setSuccess('Payment successful! You are enrolled in the Foundation Workshop.');
+            setEnrollmentSuccess(true);
             setLoading(false);
           } catch (err) {
             setError('Failed to complete enrollment. Please contact support.');
@@ -307,6 +309,32 @@ const FoundationWorkshop: React.FC = () => {
       setShowPayment(true);
     }
   };
+
+  if (enrollmentSuccess) {
+    return (
+      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
+            <div className="text-6xl mb-6">🎉</div>
+            <h1 className="text-3xl font-bold text-blue-600 mb-4">Welcome to the Foundation AI Workshop!</h1>
+            <p className="text-gray-700 mb-6">
+              You've successfully enrolled in our Foundation workshop. Check your email for workshop details and access instructions.
+            </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-800 font-semibold">Workshop Access: Paid</p>
+              <p className="text-green-700">You can start learning immediately!</p>
+            </div>
+            <Link
+              to="/workshops"
+              className="bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
+            >
+              Back to Workshops
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">

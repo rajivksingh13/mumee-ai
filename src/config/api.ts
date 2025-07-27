@@ -1,8 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   // Use environment variable for backend URL, fallback to localhost for development
-  BASE_URL: 'https://mumee-ai-backend.onrender.com',
-  
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://mumee-ai-backend.onrender.com',
   // API endpoints
   ENDPOINTS: {
     EMAIL: {
