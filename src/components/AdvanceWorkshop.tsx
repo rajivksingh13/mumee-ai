@@ -202,7 +202,7 @@ const AdvanceWorkshop: React.FC = () => {
     }
   };
 
-  const isEnrolled = localStorage.getItem(`enrolled_${WORKSHOP_ID}`) === 'true';
+  const isEnrolled = user && localStorage.getItem(`enrolled_${WORKSHOP_ID}`) === 'true';
 
   if (enrollmentSuccess) {
     return (

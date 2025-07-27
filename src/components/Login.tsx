@@ -20,7 +20,12 @@ const Login: React.FC = () => {
 
     try {
       await loginWithEmail(email, password);
-      navigate(redirectTo);
+      // Add fromRedirect parameter if redirecting to beginner workshop
+      if (redirectTo === '/workshops/beginner') {
+        navigate('/workshops/beginner?fromRedirect=true');
+      } else {
+        navigate(redirectTo);
+      }
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to login. Please check your credentials.');
@@ -51,7 +56,12 @@ const Login: React.FC = () => {
           console.error('Error sending welcome email for Google login:', emailError);
         }
       }
-      navigate(redirectTo);
+      // Add fromRedirect parameter if redirecting to beginner workshop
+      if (redirectTo === '/workshops/beginner') {
+        navigate('/workshops/beginner?fromRedirect=true');
+      } else {
+        navigate(redirectTo);
+      }
     } catch (err: any) {
       console.error('Google login error:', err);
       setError(err.message || 'Failed to login with Google.');
