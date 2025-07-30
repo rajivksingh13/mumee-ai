@@ -2,135 +2,178 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut, 
-  GoogleAuthProvider, 
-  signInWithPopup,
-  sendPasswordResetEmail
-  // sendEmailVerification (removed)
+  User as FirebaseUser,
+  updateProfile,
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { ref, set } from 'firebase/database';
-import { database } from '../config/firebase';
+import { databaseService } from './databaseService';
+import { Timestamp } from 'firebase/firestore';
 
-/**
- * Register a new user with email and password
- * @param email User's email
- * @param password User's password
- * @param displayName User's display name
- * @param accountType User's account type (individual, business, enterprise, or admin)
- * @returns User credential
- */
-export const registerWithEmail = async (
-  email: string, 
-  password: string, 
-  displayName: string,
-  accountType: 'individual' | 'business' | 'enterprise' | 'admin'
-) => {
+export interface AuthError {
+  code: string;
+  message: string;
+}
+
+export const register = async (email: string, password: string, displayName: string): Promise<FirebaseUser> => {
   try {
+    // Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // No email verification step
+    // Update display name
+    await updateProfile(user, { displayName });
 
-    // Create user record in Firebase Realtime Database
-    const userRef = ref(database, `users/${user.uid}`);
-    await set(userRef, {
-      email: user.email,
+    // Create user record in Firestore
+    await databaseService.createUser({
+      uid: user.uid,
+      email: user.email!,
       displayName: displayName,
-      accountType: accountType,
-      createdAt: Date.now(),
-      lastLogin: Date.now()
+      photoURL: user.photoURL || undefined,
+      profile: {
+        firstName: displayName.split(' ')[0] || '',
+        lastName: displayName.split(' ').slice(1).join(' ') || '',
+      },
+      preferences: {
+        emailNotifications: true,
+        marketingEmails: false,
+        newsletter: false,
+      },
+      stats: {
+        totalEnrollments: 0,
+        completedWorkshops: 0,
+        certificatesEarned: 0,
+        lastActive: Timestamp.now(),
+      }
     });
 
+    console.log('✅ User created successfully in both Auth and Firestore');
     return user;
   } catch (error: any) {
-    let message = 'Failed to create account.';
-    if (error.code === 'auth/email-already-in-use') message = 'Email is already in use.';
-    else if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
-    else if (error.code === 'auth/weak-password') message = 'Password is too weak.';
-    throw new Error(message);
+    console.error('❌ Registration failed:', error);
+    throw error;
   }
 };
 
-/**
- * Sign in with email and password
- * @param email User's email
- * @param password User's password
- * @returns User credential
- */
-export const loginWithEmail = async (email: string, password: string) => {
+export const login = async (email: string, password: string): Promise<FirebaseUser> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Update last login time (correct path)
-    const userRef = ref(database, `users/${user.uid}/lastLogin`);
-    await set(userRef, new Date().toISOString());
+    // Check if user exists in Firestore, if not create them
+    const existingUser = await databaseService.getUser(user.uid);
+    if (!existingUser) {
+      console.log('⚠️ User exists in Auth but not in Firestore, creating user record...');
+      await databaseService.createUser({
+        uid: user.uid,
+        email: user.email!,
+        displayName: user.displayName || user.email!.split('@')[0],
+        photoURL: user.photoURL || undefined,
+        profile: {
+          firstName: user.displayName?.split(' ')[0] || '',
+          lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+        },
+        preferences: {
+          emailNotifications: true,
+          marketingEmails: false,
+          newsletter: false,
+        },
+        stats: {
+          totalEnrollments: 0,
+          completedWorkshops: 0,
+          certificatesEarned: 0,
+          lastActive: Timestamp.now(),
+        } as any
+      });
+    } else {
+      // Update last active
+      await databaseService.updateUser(user.uid, {
+        stats: {
+          totalEnrollments: existingUser.stats?.totalEnrollments || 0,
+          completedWorkshops: existingUser.stats?.completedWorkshops || 0,
+          certificatesEarned: existingUser.stats?.certificatesEarned || 0,
+          lastActive: Timestamp.now(),
+        }
+      });
+    }
 
-    // Optionally, check if email is verified
-    // if (!user.emailVerified) throw new Error('Please verify your email before logging in.');
-
+    console.log('✅ User logged in successfully');
     return user;
   } catch (error: any) {
-    let message = 'Failed to sign in.';
-    if (error.code === 'auth/user-not-found') message = 'No account found with this email.';
-    else if (error.code === 'auth/wrong-password') message = 'Incorrect password.';
-    else if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
-    else if (error.code === 'auth/user-disabled') message = 'This account has been disabled.';
-    throw new Error(message);
+    console.error('❌ Login failed:', error);
+    throw error;
   }
 };
 
-/**
- * Sign in with Google
- * @returns User credential
- */
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (): Promise<FirebaseUser> => {
   try {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
     const user = userCredential.user;
 
-    // Create or update user record in Firebase Realtime Database
-    const userRef = ref(database, `users/${user.uid}`);
-    await set(userRef, {
-      email: user.email,
-      displayName: user.displayName,
-      lastLogin: new Date().toISOString()
-    });
+    // Check if user exists in Firestore, if not create them
+    const existingUser = await databaseService.getUser(user.uid);
+    if (!existingUser) {
+      console.log('⚠️ Google user exists in Auth but not in Firestore, creating user record...');
+      await databaseService.createUser({
+        uid: user.uid,
+        email: user.email!,
+        displayName: user.displayName || user.email!.split('@')[0],
+        photoURL: user.photoURL || undefined,
+        profile: {
+          firstName: user.displayName?.split(' ')[0] || '',
+          lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+        },
+        preferences: {
+          emailNotifications: true,
+          marketingEmails: false,
+          newsletter: false,
+        },
+        stats: {
+          totalEnrollments: 0,
+          completedWorkshops: 0,
+          certificatesEarned: 0,
+          lastActive: Timestamp.now(),
+        } as any
+      });
+    } else {
+      // Update last active
+      await databaseService.updateUser(user.uid, {
+        stats: {
+          totalEnrollments: existingUser.stats?.totalEnrollments || 0,
+          completedWorkshops: existingUser.stats?.completedWorkshops || 0,
+          certificatesEarned: existingUser.stats?.certificatesEarned || 0,
+          lastActive: Timestamp.now(),
+        }
+      });
+    }
 
+    console.log('✅ Google user logged in successfully');
     return user;
   } catch (error: any) {
-    let message = 'Failed to sign in with Google.';
-    if (error.code === 'auth/popup-closed-by-user') message = 'Google sign-in was cancelled.';
-    throw new Error(message);
-  }
-};
-
-/**
- * Sign out the current user
- * @returns Promise that resolves when the user is signed out
- */
-export const logout = async () => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error('Error in logout:', error);
+    console.error('❌ Google login failed:', error);
     throw error;
   }
 };
 
-/**
- * Send password reset email
- * @param email User's email
- * @returns Promise that resolves when the email is sent
- */
-export const resetPassword = async (email: string) => {
+export const logout = async (): Promise<void> => {
+  try {
+    await signOut(auth);
+    console.log('✅ User logged out successfully');
+  } catch (error: any) {
+    console.error('❌ Logout failed:', error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (email: string): Promise<void> => {
   try {
     await sendPasswordResetEmail(auth, email);
+    console.log('✅ Password reset email sent successfully');
   } catch (error: any) {
-    let message = 'Failed to send password reset email.';
-    if (error.code === 'auth/user-not-found') message = 'No account found with this email.';
-    else if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
-    throw new Error(message);
+    console.error('❌ Password reset failed:', error);
+    throw error;
   }
 }; 

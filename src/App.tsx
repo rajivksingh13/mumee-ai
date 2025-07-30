@@ -14,6 +14,7 @@ import AccountPage from './components/AccountPage';
 import ProfilePage from './components/ProfilePage';
 import { PaymentDetailsPage } from './components/AccountPage';
 import AdvanceWorkshop from './components/AdvanceWorkshop';
+import EnrollmentDashboard from './components/EnrollmentDashboard';
 
 // Placeholder components for each page
 const Home = () => (
@@ -237,6 +238,7 @@ const App: React.FC = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/payments" element={<PaymentDetailsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/enrollment-dashboard" element={<EnrollmentDashboard />} />
       </Routes>
       <Footer />
     </Router>

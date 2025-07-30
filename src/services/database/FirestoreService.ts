@@ -1,0 +1,448 @@
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  Timestamp,
+  writeBatch,
+  onSnapshot,
+  DocumentData,
+  QuerySnapshot,
+  setDoc
+} from 'firebase/firestore';
+import { 
+  IDatabaseService, 
+  DatabaseConfig, 
+  User, 
+  Workshop, 
+  Enrollment, 
+  Payment, 
+  Module,
+  DataConverter 
+} from './IDatabaseService';
+import { firestore } from '../../config/firebase';
+
+export class FirestoreService implements IDatabaseService {
+  constructor(_config: DatabaseConfig) {
+    // Config is stored but not actively used in current implementation
+    // Keeping for future use when needed
+  }
+
+  async connect(): Promise<void> {
+    // Firestore is automatically connected via Firebase config
+    console.log('✅ Firestore connected successfully');
+  }
+
+  async disconnect(): Promise<void> {
+    // Firestore handles connection management automatically
+  }
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      // Simple health check by trying to read a document
+      const testRef = doc(firestore, 'health', 'test');
+      await getDoc(testRef);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // User operations
+  async createUser(userData: Omit<User, 'createdAt' | 'updatedAt'>): Promise<string> {
+    const userRef = doc(firestore, 'users', userData.uid);
+    const now = Timestamp.now();
+    
+    await setDoc(userRef, {
+      ...userData,
+      createdAt: now,
+      updatedAt: now
+    });
+    
+    return userData.uid;
+  }
+
+  async getUser(userId: string): Promise<User | null> {
+    const userRef = doc(firestore, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      return DataConverter.normalizeUser(userSnap.data() as User);
+    }
+    return null;
+  }
+
+  async updateUser(userId: string, updates: Partial<User>): Promise<void> {
+    const userRef = doc(firestore, 'users', userId);
+    await updateDoc(userRef, {
+      ...updates,
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const userRef = doc(firestore, 'users', userId);
+    await deleteDoc(userRef);
+  }
+
+  // Workshop operations
+  async createWorkshop(workshopData: Omit<Workshop, 'createdAt' | 'updatedAt'>): Promise<string> {
+    const workshopRef = doc(firestore, 'workshops', workshopData.id);
+    const now = Timestamp.now();
+    
+    await setDoc(workshopRef, {
+      ...workshopData,
+      createdAt: now,
+      updatedAt: now
+    });
+    
+    return workshopData.id;
+  }
+
+  async getWorkshops(status: 'active' | 'draft' | 'archived' = 'active'): Promise<Workshop[]> {
+    const workshopsRef = collection(firestore, 'workshops');
+    const q = query(workshopsRef, where('status', '==', status), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => DataConverter.normalizeWorkshop(doc.data() as Workshop));
+  }
+
+  async getWorkshop(workshopId: string): Promise<Workshop | null> {
+    const workshopRef = doc(firestore, 'workshops', workshopId);
+    const workshopSnap = await getDoc(workshopRef);
+    
+    if (workshopSnap.exists()) {
+      return DataConverter.normalizeWorkshop(workshopSnap.data() as Workshop);
+    }
+    return null;
+  }
+
+  async getWorkshopBySlug(slug: string): Promise<Workshop | null> {
+    const workshopsRef = collection(firestore, 'workshops');
+    const q = query(workshopsRef, where('slug', '==', slug), where('status', '==', 'active'));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      return DataConverter.normalizeWorkshop(querySnapshot.docs[0].data() as Workshop);
+    }
+    return null;
+  }
+
+  async updateWorkshop(workshopId: string, updates: Partial<Workshop>): Promise<void> {
+    const workshopRef = doc(firestore, 'workshops', workshopId);
+    await updateDoc(workshopRef, {
+      ...updates,
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  async deleteWorkshop(workshopId: string): Promise<void> {
+    const workshopRef = doc(firestore, 'workshops', workshopId);
+    await deleteDoc(workshopRef);
+  }
+
+  // Enrollment operations
+  async createEnrollment(enrollmentData: Omit<Enrollment, 'id' | 'enrolledAt'>): Promise<string> {
+    const enrollmentsRef = collection(firestore, 'enrollments');
+    const now = Timestamp.now();
+    
+    const enrollmentDoc = await addDoc(enrollmentsRef, {
+      ...enrollmentData,
+      enrolledAt: now,
+      progress: {
+        currentModule: 0,
+        completedModules: [],
+        totalModules: 0,
+        percentageComplete: 0,
+        lastAccessed: now
+      }
+    });
+    
+    return enrollmentDoc.id;
+  }
+
+  async getUserEnrollments(userId: string): Promise<Enrollment[]> {
+    const enrollmentsRef = collection(firestore, 'enrollments');
+    const q = query(
+      enrollmentsRef, 
+      where('userId', '==', userId),
+      orderBy('enrolledAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => DataConverter.normalizeEnrollment({
+      id: doc.id,
+      ...doc.data()
+    } as Enrollment));
+  }
+
+  async getEnrollment(enrollmentId: string): Promise<Enrollment | null> {
+    const enrollmentRef = doc(firestore, 'enrollments', enrollmentId);
+    const enrollmentSnap = await getDoc(enrollmentRef);
+    
+    if (enrollmentSnap.exists()) {
+      return DataConverter.normalizeEnrollment({
+        id: enrollmentSnap.id,
+        ...enrollmentSnap.data()
+      } as Enrollment);
+    }
+    return null;
+  }
+
+  async updateEnrollment(enrollmentId: string, updates: Partial<Enrollment>): Promise<void> {
+    const enrollmentRef = doc(firestore, 'enrollments', enrollmentId);
+    await updateDoc(enrollmentRef, updates);
+  }
+
+  async deleteEnrollment(enrollmentId: string): Promise<void> {
+    const enrollmentRef = doc(firestore, 'enrollments', enrollmentId);
+    await deleteDoc(enrollmentRef);
+  }
+
+  async isUserEnrolled(userId: string, workshopId: string): Promise<boolean> {
+    const enrollmentsRef = collection(firestore, 'enrollments');
+    const q = query(
+      enrollmentsRef,
+      where('userId', '==', userId),
+      where('workshopId', '==', workshopId),
+      where('status', 'in', ['active', 'completed'])
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return !querySnapshot.empty;
+  }
+
+  // Payment operations
+  async createPayment(paymentData: Omit<Payment, 'id' | 'createdAt'>): Promise<string> {
+    const paymentsRef = collection(firestore, 'payments');
+    const now = Timestamp.now();
+    
+    const paymentDoc = await addDoc(paymentsRef, {
+      ...paymentData,
+      createdAt: now
+    });
+    
+    return paymentDoc.id;
+  }
+
+  async getPayment(paymentId: string): Promise<Payment | null> {
+    const paymentRef = doc(firestore, 'payments', paymentId);
+    const paymentSnap = await getDoc(paymentRef);
+    
+    if (paymentSnap.exists()) {
+      return DataConverter.normalizePayment({
+        id: paymentSnap.id,
+        ...paymentSnap.data()
+      } as Payment);
+    }
+    return null;
+  }
+
+  async updatePayment(paymentId: string, updates: Partial<Payment>): Promise<void> {
+    const paymentRef = doc(firestore, 'payments', paymentId);
+    await updateDoc(paymentRef, updates);
+  }
+
+  async getUserPayments(userId: string): Promise<Payment[]> {
+    const paymentsRef = collection(firestore, 'payments');
+    const q = query(
+      paymentsRef,
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => DataConverter.normalizePayment({
+      id: doc.id,
+      ...doc.data()
+    } as Payment));
+  }
+
+  // Module operations
+  async createModule(moduleData: Omit<Module, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    const modulesRef = collection(firestore, 'modules');
+    const now = Timestamp.now();
+    
+    const moduleDoc = await addDoc(modulesRef, {
+      ...moduleData,
+      createdAt: now,
+      updatedAt: now
+    });
+    
+    return moduleDoc.id;
+  }
+
+  async getWorkshopModules(workshopId: string): Promise<Module[]> {
+    const modulesRef = collection(firestore, 'modules');
+    const q = query(
+      modulesRef,
+      where('workshopId', '==', workshopId),
+      where('status', '==', 'active'),
+      orderBy('order', 'asc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => DataConverter.normalizeModule({
+      id: doc.id,
+      ...doc.data()
+    } as Module));
+  }
+
+  async getModule(moduleId: string): Promise<Module | null> {
+    const moduleRef = doc(firestore, 'modules', moduleId);
+    const moduleSnap = await getDoc(moduleRef);
+    
+    if (moduleSnap.exists()) {
+      return DataConverter.normalizeModule({
+        id: moduleSnap.id,
+        ...moduleSnap.data()
+      } as Module);
+    }
+    return null;
+  }
+
+  async updateModule(moduleId: string, updates: Partial<Module>): Promise<void> {
+    const moduleRef = doc(firestore, 'modules', moduleId);
+    await updateDoc(moduleRef, {
+      ...updates,
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  async deleteModule(moduleId: string): Promise<void> {
+    const moduleRef = doc(firestore, 'modules', moduleId);
+    await deleteDoc(moduleRef);
+  }
+
+  // Batch operations
+  async enrollUserInWorkshop(
+    userId: string, 
+    workshopId: string, 
+    paymentData?: Partial<Payment>
+  ): Promise<{ enrollmentId: string; paymentId?: string }> {
+    const batch = writeBatch(firestore);
+    
+    // Create enrollment
+    const enrollmentsRef = collection(firestore, 'enrollments');
+    const enrollmentRef = doc(enrollmentsRef);
+    const now = Timestamp.now();
+    
+    const enrollment: Omit<Enrollment, 'id'> = {
+      userId,
+      workshopId,
+      status: 'active',
+      enrolledAt: now,
+      payment: {
+        amount: 0, // Will be updated if payment exists
+        currency: 'INR',
+        status: 'completed',
+        paymentMethod: 'free'
+      },
+      progress: {
+        currentModule: 0,
+        completedModules: [],
+        totalModules: 0,
+        percentageComplete: 0,
+        lastAccessed: now
+      }
+    };
+    
+    batch.set(enrollmentRef, enrollment);
+    
+    let paymentId: string | undefined;
+    
+    // Create payment record if payment data exists
+    if (paymentData) {
+      const paymentsRef = collection(firestore, 'payments');
+      const paymentRef = doc(paymentsRef);
+      
+      const payment: Omit<Payment, 'id' | 'createdAt'> = {
+        userId,
+        workshopId,
+        enrollmentId: enrollmentRef.id,
+        amount: paymentData.amount || 0,
+        currency: paymentData.currency || 'INR',
+        status: paymentData.status || 'completed',
+        paymentMethod: paymentData.paymentMethod || 'razorpay',
+        razorpay: paymentData.razorpay
+      };
+      
+      batch.set(paymentRef, {
+        ...payment,
+        createdAt: now
+      });
+      
+      paymentId = paymentRef.id;
+      
+      // Update enrollment with payment details
+      batch.update(enrollmentRef, {
+        'payment.amount': payment.amount,
+        'payment.paymentId': payment.razorpay?.paymentId,
+        'payment.orderId': payment.razorpay?.orderId,
+        'payment.paidAt': now
+      });
+    }
+    
+    await batch.commit();
+    
+    return {
+      enrollmentId: enrollmentRef.id,
+      paymentId
+    };
+  }
+
+  // Analytics operations
+  async updateAnalytics(date: string, data: any): Promise<void> {
+    const analyticsRef = doc(firestore, 'analytics', date);
+    await updateDoc(analyticsRef, {
+      ...data,
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  async getAnalytics(date: string): Promise<any> {
+    const analyticsRef = doc(firestore, 'analytics', date);
+    const analyticsSnap = await getDoc(analyticsRef);
+    
+    if (analyticsSnap.exists()) {
+      return analyticsSnap.data();
+    }
+    return null;
+  }
+
+  // Real-time listeners (Firestore's strength!)
+  onUserEnrollments(userId: string, callback: (enrollments: Enrollment[]) => void): () => void {
+    const enrollmentsRef = collection(firestore, 'enrollments');
+    const q = query(
+      enrollmentsRef,
+      where('userId', '==', userId),
+      orderBy('enrolledAt', 'desc')
+    );
+    
+    return onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
+      const enrollments = querySnapshot.docs.map(doc => DataConverter.normalizeEnrollment({
+        id: doc.id,
+        ...doc.data()
+      } as Enrollment));
+      callback(enrollments);
+    });
+  }
+
+  onWorkshopUpdates(workshopId: string, callback: (workshop: Workshop | null) => void): () => void {
+    const workshopRef = doc(firestore, 'workshops', workshopId);
+    
+    return onSnapshot(workshopRef, (doc) => {
+      if (doc.exists()) {
+        callback(DataConverter.normalizeWorkshop(doc.data() as Workshop));
+      } else {
+        callback(null);
+      }
+    });
+  }
+} 

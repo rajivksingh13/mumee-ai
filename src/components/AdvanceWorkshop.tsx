@@ -1,243 +1,252 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { buildApiUrl, API_CONFIG } from '../config/api';
-
-const advanceTopics = [
-  {
-    topic: 'GenAI Fundamentals Refresher',
-    hours: 0.5,
-    subTopics: [
-      'AI, ML, Deep Learning, GenAI Recap',
-      'Prompt Engineering (Advanced)',
-      'Responsible AI & Ethics',
-    ],
-  },
-  {
-    topic: 'Retrieval Augmented Generation (RAG)',
-    hours: 1.0,
-    subTopics: [
-      'What is RAG?',
-      'RAG Architecture & Flow',
-      'Applications of RAG',
-      'Building RAG Pipelines',
-    ],
-  },
-  {
-    topic: 'Vector Databases & Embeddings',
-    hours: 1.0,
-    subTopics: [
-      'What are Embeddings?',
-      'Popular Vector DBs (Pinecone, Weaviate, FAISS, Chroma)',
-      'Storing & Querying Vectors',
-      'Semantic Search',
-    ],
-  },
-  {
-    topic: 'Model Customization & Fine-Tuning',
-    hours: 1.0,
-    subTopics: [
-      'Fine-Tuning vs Prompt Engineering',
-      'Fine-Tuning LLMs (OpenAI, HuggingFace, Google, etc.)',
-      'LoRA, QLoRA, PEFT',
-      'Data Preparation for Fine-Tuning',
-    ],
-  },
-  {
-    topic: 'Model Training & Evaluation',
-    hours: 1.0,
-    subTopics: [
-      'Training Custom Models',
-      'Transfer Learning',
-      'Evaluation Metrics',
-      'Experiment Tracking',
-    ],
-  },
-  {
-    topic: 'Advanced GenAI Applications',
-    hours: 1.0,
-    subTopics: [
-      'A2A (Agent-to-Agent) Workflows',
-      'OCR (Optical Character Recognition) with AI',
-      'Foundation Models (FM)',
-      'Custom Model Deployment',
-    ],
-  },
-  {
-    topic: 'Capstone Project & Real-World Use Cases',
-    hours: 1.0,
-    subTopics: [
-      'Capstone Project: End-to-End GenAI Solution',
-      'Department-wise Use Cases (HR, Finance, Marketing, etc.)',
-      'Best Practices for Production',
-      'Scaling & Monitoring',
-    ],
-  },
-];
-
-const totalHours = advanceTopics.reduce((sum, t) => sum + t.hours, 0);
-
-const WORKSHOP_ID = 'advance';
-const WORKSHOP_TITLE = 'AI Workshop – Advance Level';
-const WORKSHOP_PRICE = 1999;
+import { databaseService, Workshop } from '../services/databaseService';
+import { enrollmentService, EnrollmentStatus } from '../services/enrollmentService';
+import { paymentService } from '../services/paymentService';
 
 const AdvanceWorkshop: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [isEnrolling, setIsEnrolling] = useState(false);
   const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [workshop, setWorkshop] = useState<Workshop | null>(null);
+  const [enrollmentStatus, setEnrollmentStatus] = useState<EnrollmentStatus>({
+    isEnrolled: false,
+    enrollment: null,
+    progress: null,
+    canAccess: false,
+    isCompleted: false
+  });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [, setSuccess] = useState<string | null>(null);
+  const [hasAutoEnrolled, setHasAutoEnrolled] = useState(false);
 
-  const handlePayment = async () => {
-    setError(null);
-    setLoading(true);
-    setSuccess(null);
-    try {
-      if (!(window as any).Razorpay) {
-        setError('Razorpay script not loaded');
+  // Get workshop ID from the workshop data
+  const workshopId = workshop?.id || 'advanced-workshop';
+  const WORKSHOP_SLUG = 'advanced';
+
+  // Load workshop data and enrollment status from Firestore
+  useEffect(() => {
+    const loadWorkshopData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch workshop data from Firestore
+        const workshopData = await databaseService.getWorkshopBySlug(WORKSHOP_SLUG);
+        if (workshopData) {
+          setWorkshop(workshopData);
+        } else {
+          setError('Workshop not found');
+        }
+
+        // Check enrollment status if user is logged in
+        if (user) {
+          const status = await enrollmentService.getEnrollmentStatus(user.uid, workshopId);
+          setEnrollmentStatus(status);
+        }
+      } catch (error) {
+        console.error('Error loading workshop data:', error);
+        setError('Failed to load workshop data');
+      } finally {
         setLoading(false);
-        return;
       }
-      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-      if (!razorpayKey) {
-        setError('Razorpay API key not configured');
-        setLoading(false);
-        return;
-      }
-      // Create order on backend
-      const orderResponse = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PAYMENT.CREATE_ORDER), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: WORKSHOP_PRICE * 100,
-          currency: 'INR',
-          courseId: WORKSHOP_ID,
-        }),
-      });
-      if (!orderResponse.ok) {
-        const errorData = await orderResponse.json();
-        throw new Error(errorData.error || 'Failed to create payment order');
-      }
-      const orderData = await orderResponse.json();
-      // Open Razorpay modal
-      const options = {
-        key: razorpayKey,
-        amount: WORKSHOP_PRICE * 100,
-        currency: 'INR',
-        name: 'titliAI',
-        description: `Payment for ${WORKSHOP_TITLE}`,
-        image: '/titli.png',
-        order_id: orderData.id,
-        theme: { color: '#3b82f6' },
-        modal: { ondismiss: function() { setLoading(false); } },
-        prefill: {
-          name: user?.displayName || '',
-          email: user?.email || '',
-        },
-        handler: async function(response: any) {
-          try {
-            // Verify payment with backend
-            const verifyResponse = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PAYMENT.VERIFY), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                courseId: WORKSHOP_ID,
-                userId: user?.uid,
-              }),
-            });
-            if (!verifyResponse.ok) {
-              const errorData = await verifyResponse.json();
-              throw new Error(errorData.error || 'Payment verification failed');
-            }
-            // Send enrollment email via backend
-            try {
-              const emailResponse = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.ENROLLMENT), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  email: user?.email || '',
-                  courseTitle: WORKSHOP_TITLE,
-                  coursePrice: WORKSHOP_PRICE,
-                  paymentId: response.razorpay_payment_id,
-                  orderId: response.razorpay_order_id,
-                  userName: user?.displayName || 'User',
-                }),
-              });
-              if (emailResponse.ok) {
-                console.log('✅ Enrollment email sent successfully');
-              } else {
-                console.error('❌ Failed to send enrollment email');
-              }
-            } catch (emailError) {
-              console.error('❌ Error sending enrollment email:', emailError);
-              // Don't block enrollment if email fails
-            }
-            setSuccess('Payment successful! You are enrolled in the Advance Workshop.');
-            setEnrollmentSuccess(true);
-            setLoading(false);
-          } catch (err) {
-            setError('Failed to complete enrollment. Please contact support.');
-            setLoading(false);
-          }
-        },
-      };
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.open();
-    } catch (err: any) {
-      setError(err.message || 'Failed to initialize payment. Please try again.');
-      setLoading(false);
+    };
+
+    loadWorkshopData();
+  }, [user, workshopId]);
+
+  // Check for redirect parameter after login
+  useEffect(() => {
+    const fromRedirect = searchParams.get('fromRedirect');
+    if (fromRedirect === 'true' && user && workshop && !hasAutoEnrolled) {
+      // User just logged in and was redirected here
+      // For paid workshops, NEVER show success page without payment
+      // Only show the main workshop page with "Enroll Now" button
+      setHasAutoEnrolled(true);
+      // Clear the URL parameter to prevent showing welcome page again
+      window.history.replaceState({}, document.title, '/workshops/advanced');
     }
-  };
+  }, [user, searchParams, workshop, hasAutoEnrolled]);
 
-  const handleEnrollClick = () => {
+  const handleEnroll = async () => {
+    console.log('🎯 Enroll button clicked');
+    
     if (!user) {
-      navigate('/login?redirect=/workshops/advance');
-    } else {
-      setShowPayment(true);
+      console.log('❌ No user found, redirecting to login');
+      navigate('/login?redirect=/workshops/advanced');
+      return;
+    }
+
+    if (!workshop) {
+      console.log('❌ Workshop data not available');
+      setError('Workshop data not available');
+      return;
+    }
+
+    // Check if already enrolled
+    if (enrollmentStatus.isEnrolled) {
+      console.log('❌ User already enrolled');
+      setError('You are already enrolled in this workshop');
+      return;
+    }
+
+    console.log('✅ Starting enrollment process for user:', user.uid);
+    console.log('✅ Workshop data:', workshop);
+    
+    setIsEnrolling(true);
+    
+    try {
+      console.log('💳 Processing payment through Razorpay...');
+      
+      // Process payment through Razorpay
+      const paymentResult = await paymentService.processPayment({
+        amount: workshop.price,
+        currency: workshop.currency,
+        courseId: workshopId,
+        courseTitle: workshop.title,
+        userName: user.displayName || 'User',
+        userEmail: user.email || '',
+        userId: user.uid,
+      });
+
+      console.log('📊 Payment result:', paymentResult);
+
+      if (!paymentResult.success) {
+        console.error('❌ Payment failed:', paymentResult.error);
+        throw new Error(paymentResult.error || 'Payment failed');
+      }
+
+      console.log('✅ Payment successful, enrolling user...');
+
+      // Enroll user using enrollment service with actual payment data
+      await enrollmentService.enrollUser(user.uid, workshopId, workshop, {
+        amount: workshop.price,
+        currency: workshop.currency,
+        status: 'completed',
+        paymentMethod: 'razorpay',
+        paymentId: paymentResult.paymentId,
+        orderId: paymentResult.orderId,
+      });
+      
+      console.log('✅ User enrolled successfully');
+      
+      // Send enrollment email via backend
+      try {
+        console.log('📧 Sending enrollment email...');
+        const emailResponse = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.ENROLLMENT), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user?.email || '',
+            courseTitle: workshop?.title || 'Advanced AI Workshop',
+            coursePrice: workshop?.price || 0,
+            paymentId: paymentResult.paymentId || 'PAID_ENROLLMENT',
+            orderId: paymentResult.orderId || `paid_${Date.now()}`,
+            userName: user?.displayName || 'User',
+          }),
+        });
+        if (emailResponse.ok) {
+          console.log('✅ Enrollment email sent successfully');
+        } else {
+          console.error('❌ Failed to send enrollment email');
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending enrollment email:', emailError);
+        // Don't block enrollment if email fails
+      }
+      
+      // Update enrollment status
+      const status = await enrollmentService.getEnrollmentStatus(user.uid, workshopId);
+      setEnrollmentStatus(status);
+      
+      // Show success
+      setEnrollmentSuccess(true);
+      console.log('🎉 Enrollment process completed successfully');
+      
+    } catch (error) {
+      console.error('❌ Enrollment failed:', error);
+      setError(error instanceof Error ? error.message : 'Enrollment failed. Please try again.');
+    } finally {
+      setIsEnrolling(false);
     }
   };
 
-  const isEnrolled = user && localStorage.getItem(`enrolled_${WORKSHOP_ID}`) === 'true';
-
-  if (enrollmentSuccess) {
+  // Loading state
+  if (loading) {
     return (
       <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
-            <div className="text-6xl mb-6">🎉</div>
-            <h1 className="text-3xl font-bold text-blue-600 mb-4">Welcome to the Advance AI Workshop!</h1>
-            <p className="text-gray-700 mb-6">
-              You've successfully enrolled in our Advance workshop. Check your email for workshop details and access instructions.
-            </p>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-green-800 font-semibold">Workshop Access: Paid</p>
-              <p className="text-green-700">You can start learning immediately!</p>
-            </div>
-            <Link
-              to="/workshops"
-              className="bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
-            >
-              Back to Workshops
-            </Link>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-700">Loading workshop data...</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="bg-white/70 border border-red-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
+            <div className="text-6xl mb-6">❌</div>
+            <h1 className="text-3xl font-bold text-red-600 mb-4">Error Loading Workshop</h1>
+            <p className="text-gray-700 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (enrollmentSuccess) {
+    return (
+      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="bg-white/70 border border-green-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
+            <div className="text-6xl mb-6">🎉</div>
+            <h1 className="text-3xl font-bold text-green-600 mb-4">Enrollment Successful!</h1>
+            <p className="text-gray-700 mb-6">
+              You've successfully enrolled in the Advanced AI Workshop. Check your email for workshop details and access instructions.
+            </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-800 font-semibold">Workshop Access: Paid</p>
+              <p className="text-green-700">You can start learning immediately!</p>
+            </div>
+            <button
+              onClick={() => {
+                setEnrollmentSuccess(false);
+              }}
+              className="bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
+            >
+              Start Learning
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main workshop page
   return (
     <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Top Navigation */}
+        {/* Back Navigation */}
         <div className="mb-8">
           <Link
             to="/workshops"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold mb-4"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold transition-colors"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -245,15 +254,17 @@ const AdvanceWorkshop: React.FC = () => {
             Back to All Workshops
           </Link>
         </div>
+
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
-            {WORKSHOP_TITLE}
+          <h1 className="text-4xl md:text-5xl font-bold text-blue-600 mb-6">
+            {workshop?.title || 'Advanced AI Workshop'}
           </h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-            Master advanced GenAI concepts and tools. Build, fine-tune, and deploy real-world AI solutions with industry best practices.
+            {workshop?.description || 'Master advanced AI concepts with our expert-level workshop covering cutting-edge techniques, research applications, and industry projects.'}
           </p>
         </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
@@ -263,7 +274,7 @@ const AdvanceWorkshop: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Duration</h3>
-                  <p className="text-gray-700">{totalHours} hours</p>
+                  <p className="text-gray-700">{workshop?.duration || 16} hours</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Level</h3>
@@ -271,149 +282,156 @@ const AdvanceWorkshop: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Format</h3>
-                  <p className="text-gray-700">Online Self-Paced</p>
+                  <p className="text-gray-700">{workshop?.format || 'Online Self-Paced'}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Certificate</h3>
-                  <p className="text-gray-700">Included</p>
+                  <p className="text-gray-700">{workshop?.certificate ? 'Included' : 'Not Included'}</p>
                 </div>
               </div>
               <p className="text-gray-700">
-                This workshop is for professionals and enthusiasts ready to take their GenAI skills to the next level. You'll work on real-world projects and learn advanced techniques used in the industry.
+                {workshop?.overview?.description || 'This workshop is designed for experienced professionals who want to master advanced AI techniques, research methodologies, and industry applications. Perfect for those looking to become AI experts.'}
               </p>
             </div>
+
             {/* Curriculum */}
             <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
               <h2 className="text-2xl font-bold text-blue-600 mb-6">Curriculum</h2>
-              <div className="space-y-6">
-                {advanceTopics.map((topic, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900">{topic.topic}</h3>
-                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {topic.hours} hour{topic.hours !== 1 ? 's' : ''}
-                      </span>
+              
+              {workshop?.curriculum?.modules ? (
+                <div className="space-y-6">
+                  {workshop.curriculum.modules.map((module, index) => (
+                    <div key={module.id || index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">{module.title}</h3>
+                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                          {module.duration} hour{module.duration !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 mb-3">{module.description}</p>
+                      {module.lessons && (
+                        <ul className="space-y-2">
+                          {module.lessons.map((lesson, lessonIndex) => (
+                            <li key={lesson.id || lessonIndex} className="flex items-start">
+                              <span className="text-blue-500 mr-2 mt-1">•</span>
+                              <span className="text-gray-700">{lesson.title} ({lesson.duration} min)</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    <ul className="space-y-2">
-                      {topic.subTopics.map((subTopic, subIndex) => (
-                        <li key={subIndex} className="flex items-start">
-                          <span className="text-blue-500 mr-2 mt-1">•</span>
-                          <span className="text-gray-700">{subTopic}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : Array.isArray(workshop?.curriculum) ? (
+                // Fallback for old curriculum structure (simple topics array)
+                <div className="space-y-6">
+                  {workshop.curriculum.map((topic: any, index: number) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">{topic.topic}</h3>
+                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                          {topic.hours} hour{topic.hours !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <ul className="space-y-2">
+                        {topic.subTopics.map((subTopic: string, subIndex: number) => (
+                          <li key={subIndex} className="flex items-start">
+                            <span className="text-blue-500 mr-2 mt-1">•</span>
+                            <span className="text-gray-700">{subTopic}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Curriculum details are being loaded...</p>
+                </div>
+              )}
             </div>
           </div>
+
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-8">
-              {/* Enrollment Card */}
-              <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl mb-6">
-                <div className="text-center mb-6">
-                  <div className="text-4xl mb-4">🦋</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Paid Workshop</h3>
-                  <div className="3xl font-bold text-blue-600 mb-2">₹{WORKSHOP_PRICE}</div>
-                  <p className="text-gray-600 text-sm">One-time payment</p>
-                </div>
-                {isEnrolled ? (
-                  <div className="text-center">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                      <p className="text-green-800 font-semibold">✓ Already Enrolled</p>
-                    </div>
-                    <Link
-                      to="/workshops"
-                      className="w-full bg-gray-500 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
-                    >
-                      Back to Workshops
-                    </Link>
+              {/* Enrollment Card - Only show if not enrolled */}
+              {!enrollmentStatus.isEnrolled && (
+                <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-6 backdrop-blur-2xl mb-6">
+                  <h3 className="text-xl font-bold text-blue-600 mb-4">Enroll Now</h3>
+                  <div className="mb-4">
+                    <div className="text-3xl font-bold text-green-600 mb-2">₹{workshop?.price || 1999}</div>
+                    <div className="text-gray-600">One-time payment</div>
                   </div>
-                ) : !showPayment ? (
                   <button
-                    onClick={handleEnrollClick}
-                    className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
+                    onClick={handleEnroll}
+                    disabled={isEnrolling}
+                    className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-semibold py-3 px-6 rounded-lg shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Enroll Now (₹{WORKSHOP_PRICE})
+                    {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
                   </button>
-                ) : (
-                  <div className="space-y-4">
-                    {error && (
-                      <div className="bg-red-500/20 border border-red-300/30 rounded-lg p-3 text-center">
-                        <div className="text-red-700 text-sm">{error}</div>
+                  <p className="text-sm text-gray-500 mt-3 text-center">
+                    Get instant access to all workshop materials
+                  </p>
+                </div>
+              )}
+
+              {/* Already Enrolled Card */}
+              {enrollmentStatus.isEnrolled && (
+                <div className="bg-green-50 border border-green-200 rounded-2xl shadow-2xl p-6 backdrop-blur-2xl mb-6">
+                  <div className="text-center">
+                    <div className="text-4xl mb-4">✅</div>
+                    <h3 className="text-xl font-bold text-green-600 mb-2">Already Enrolled</h3>
+                    <p className="text-green-700 mb-4">You have access to this workshop</p>
+                    {enrollmentStatus.progress && (
+                      <div className="mb-4">
+                        <div className="text-sm text-gray-600 mb-1">Progress</div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${enrollmentStatus.progress.percentageComplete}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {enrollmentStatus.progress.percentageComplete}% Complete
+                        </div>
                       </div>
                     )}
-                    <button
-                      className="w-full bg-white text-blue-600 font-bold py-3 px-6 rounded-xl hover:bg-gray-50 transition-colors shadow-lg disabled:opacity-50"
-                      onClick={handlePayment}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <div className="flex items-center justify-center">
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Processing...
-                        </div>
-                      ) : (
-                        'Pay with Razorpay'
-                      )}
+                    <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+                      Continue Learning
                     </button>
                   </div>
-                )}
-                <div className="mt-6 text-sm text-gray-600">
-                  <p className="mb-2">✓ Instant access</p>
-                  <p className="mb-2">✓ Lifetime access</p>
-                  <p className="mb-2">✓ Certificate included</p>
-                  <p>✓ No hidden fees</p>
                 </div>
-              </div>
-              {/* What You'll Learn */}
+              )}
+
+              {/* Workshop Features */}
               <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-6 backdrop-blur-2xl">
-                <h3 className="text-lg font-bold text-blue-600 mb-4">What You'll Learn</h3>
+                <h3 className="text-xl font-bold text-blue-600 mb-4">What You'll Get</h3>
                 <ul className="space-y-3">
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2 mt-1">✓</span>
-                    <span className="text-gray-700">Build RAG & Vector DB Solutions</span>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    <span className="text-gray-700">Expert-level AI techniques and research</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2 mt-1">✓</span>
-                    <span className="text-gray-700">Fine-tune & Deploy Custom Models</span>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    <span className="text-gray-700">Advanced machine learning projects</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2 mt-1">✓</span>
-                    <span className="text-gray-700">Work with Embeddings & Semantic Search</span>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    <span className="text-gray-700">Certificate of completion</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2 mt-1">✓</span>
-                    <span className="text-gray-700">Implement A2A, OCR, FM, and more</span>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    <span className="text-gray-700">Lifetime access to materials</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2 mt-1">✓</span>
-                    <span className="text-gray-700">Capstone Project & Real-World Use Cases</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2 mt-1">✓</span>
-                    <span className="text-gray-700">Production Best Practices</span>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    <span className="text-gray-700">Direct expert mentorship</span>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
-        </div>
-        {/* Back to Workshops */}
-        <div className="text-center mt-12">
-          <Link
-            to="/workshops"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to All Workshops
-          </Link>
         </div>
       </div>
     </div>

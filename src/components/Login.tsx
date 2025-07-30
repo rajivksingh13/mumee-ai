@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { loginWithEmail, signInWithGoogle } from '../services/authService';
+import { login, signInWithGoogle } from '../services/authService';
 import { buildApiUrl, API_CONFIG } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/account';
+  const { setUser } = useAuth();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,16 +21,36 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await loginWithEmail(email, password);
+      const user = await login(email, password);
+      
+      // Set user in context
+      setUser(user);
+      
       // Add fromRedirect parameter if redirecting to beginner workshop
       if (redirectTo === '/workshops/beginner') {
         navigate('/workshops/beginner?fromRedirect=true');
+      } else if (redirectTo === '/workshops/foundation') {
+        navigate('/workshops/foundation?fromRedirect=true');
+      } else if (redirectTo === '/workshops/advanced') {
+        navigate('/workshops/advanced?fromRedirect=true');
       } else {
         navigate(redirectTo);
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Failed to login. Please check your credentials.');
+      let errorMessage = 'Failed to login. Please check your credentials.';
+      
+      if (err.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email. Please sign up first.';
+      } else if (err.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -40,6 +62,10 @@ const Login: React.FC = () => {
 
     try {
       const user = await signInWithGoogle();
+      
+      // Set user in context
+      setUser(user);
+      
       // Check if user is new (first login)
       if (user && user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime) {
         try {
@@ -56,15 +82,30 @@ const Login: React.FC = () => {
           console.error('Error sending welcome email for Google login:', emailError);
         }
       }
-      // Add fromRedirect parameter if redirecting to beginner workshop
+      
+      // Add fromRedirect parameter if redirecting to specific workshops
       if (redirectTo === '/workshops/beginner') {
         navigate('/workshops/beginner?fromRedirect=true');
+      } else if (redirectTo === '/workshops/foundation') {
+        navigate('/workshops/foundation?fromRedirect=true');
+      } else if (redirectTo === '/workshops/advanced') {
+        navigate('/workshops/advanced?fromRedirect=true');
       } else {
         navigate(redirectTo);
       }
     } catch (err: any) {
       console.error('Google login error:', err);
-      setError(err.message || 'Failed to login with Google.');
+      let errorMessage = 'Failed to login with Google';
+      
+      if (err.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Google sign-in was cancelled.';
+      } else if (err.code === 'auth/popup-blocked') {
+        errorMessage = 'Google sign-in was blocked by your browser. Please allow popups and try again.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -195,6 +236,15 @@ const Login: React.FC = () => {
               Sign in with Google
             </button>
           </div>
+        </div>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-500">
+            Don't have an account?{' '}
+            <Link to={`/signup?redirect=${encodeURIComponent(redirectTo)}`} className="font-medium text-blue-600 hover:text-blue-500">
+              Sign up
+            </Link>
+          </p>
         </div>
       </motion.div>
     </div>

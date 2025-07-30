@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 // import { motion } from 'framer-motion';
-import { registerWithEmail, signInWithGoogle } from '../services/authService';
+import { register, signInWithGoogle } from '../services/authService';
 import { auth } from '../config/firebase';
 import { buildApiUrl, API_CONFIG } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -13,11 +14,10 @@ const SignUp: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [accountType, setAccountType] = useState<'individual' | 'business' | 'enterprise' | 'admin'>('individual');
-  const [adminCode, setAdminCode] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setUser } = useAuth();
 
   React.useEffect(() => {
     // Check if user is already logged in
@@ -27,7 +27,7 @@ const SignUp: React.FC = () => {
       }
     });
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, redirectTo]);
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +47,13 @@ const SignUp: React.FC = () => {
         return;
       }
 
-      const user = await registerWithEmail(email, password, displayName, accountType);
+      // Register user (this will create user in both Auth and Firestore)
+      const user = await register(email, password, displayName);
+      
       if (user) {
+        // Set user in context
+        setUser(user);
+        
         // Send welcome email via backend
         try {
           const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
@@ -59,7 +64,7 @@ const SignUp: React.FC = () => {
             body: JSON.stringify({
               email: email,
               userName: displayName,
-              accountType: accountType
+              accountType: 'individual'
             }),
           });
           if (!response.ok) {
@@ -68,12 +73,27 @@ const SignUp: React.FC = () => {
         } catch (emailError) {
           console.error('Error sending welcome email:', emailError);
         }
-        // User is already logged in, redirect will happen via useEffect
+        
+        // Redirect to the intended page
+        navigate(redirectTo);
       } else {
         setError('Failed to create account');
       }
     } catch (error: any) {
-      setError(error.message || 'Failed to create account');
+      console.error('Registration error:', error);
+      let errorMessage = 'Failed to create account';
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Email is already in use. Please try logging in instead.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Please choose a stronger password.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -86,7 +106,10 @@ const SignUp: React.FC = () => {
     try {
       const user = await signInWithGoogle();
       
-      // Send welcome email for Google signup too
+      // Set user in context
+      setUser(user);
+      
+      // Send welcome email for Google signup
       try {
         const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
           method: 'POST',
@@ -99,7 +122,6 @@ const SignUp: React.FC = () => {
             accountType: 'individual'
           }),
         });
-
         if (!response.ok) {
           console.error('Failed to send welcome email for Google signup');
         }
@@ -107,9 +129,21 @@ const SignUp: React.FC = () => {
         console.error('Error sending welcome email for Google signup:', emailError);
       }
       
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign up with Google.');
+      // Redirect to the intended page
+      navigate(redirectTo);
+    } catch (error: any) {
+      console.error('Google signup error:', error);
+      let errorMessage = 'Failed to sign up with Google';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Google sign-in was cancelled.';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Google sign-in was blocked by your browser. Please allow popups and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -161,40 +195,6 @@ const SignUp: React.FC = () => {
               className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
             />
           </div>
-          <div>
-            <label htmlFor="accountType" className="block text-sm font-medium text-gray-700">
-              Account Type
-            </label>
-            <select
-              id="accountType"
-              name="accountType"
-              value={accountType}
-              onChange={(e) => setAccountType(e.target.value as 'individual' | 'business' | 'enterprise' | 'admin')}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
-            >
-              <option value="individual">Individual</option>
-              <option value="business">Business</option>
-              <option value="enterprise">Enterprise</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          {accountType === 'admin' && (
-            <div>
-              <label htmlFor="adminCode" className="block text-sm font-medium text-gray-700">
-                Admin Code
-              </label>
-              <input
-                id="adminCode"
-                name="adminCode"
-                type="password"
-                required
-                value={adminCode}
-                onChange={(e) => setAdminCode(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
-                placeholder="Enter admin code"
-              />
-            </div>
-          )}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password

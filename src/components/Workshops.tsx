@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { enrollmentService } from '../services/enrollmentService';
 
-const workshops = [
+
+// Workshop configuration with Firestore IDs
+const workshopConfigs = [
   {
     title: 'Gen AI Workshop - Absolute Beginner',
     description:
@@ -10,6 +13,7 @@ const workshops = [
     cta: 'Explore Beginner Workshop',
     level: 'beginner',
     link: '/workshops/beginner',
+    workshopId: 'beginner-workshop', // Firestore workshop ID
   },
   {
     title: 'Gen AI Workshop - Foundation Level',
@@ -18,6 +22,7 @@ const workshops = [
     cta: 'Explore Foundation Workshop',
     level: 'foundation',
     link: '/workshops/foundation',
+    workshopId: 'foundation-workshop', // Firestore workshop ID
   },
   {
     title: 'Gen AI Workshop - Advance',
@@ -26,35 +31,67 @@ const workshops = [
     cta: 'Explore Advance Workshop',
     level: 'advance',
     link: '/workshops/advance',
+    workshopId: 'advanced-workshop', // Firestore workshop ID
   },
 ];
 
 const Workshops: React.FC = () => {
   const { user } = useAuth();
   const [enrolledWorkshops, setEnrolledWorkshops] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
 
-  // Check which workshops the user is enrolled in
+  // Check which workshops the user is enrolled in from Firestore
   useEffect(() => {
-    if (user) {
-      const enrolled = new Set<string>();
-      workshops.forEach(ws => {
-        if (localStorage.getItem(`enrolled_${ws.level}`) === 'true') {
-          enrolled.add(ws.level);
+    const checkEnrollments = async () => {
+      if (user) {
+        try {
+          setLoading(true);
+          const enrolled = new Set<string>();
+          
+          // Check each workshop enrollment status
+          for (const ws of workshopConfigs) {
+            const isEnrolled = await enrollmentService.isUserEnrolled(user.uid, ws.workshopId);
+            if (isEnrolled) {
+              enrolled.add(ws.level);
+            }
+          }
+          
+          setEnrolledWorkshops(enrolled);
+        } catch (error) {
+          console.error('Error checking enrollments:', error);
+        } finally {
+          setLoading(false);
         }
-      });
-      setEnrolledWorkshops(enrolled);
-    }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkEnrollments();
   }, [user]);
+
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading workshops...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
   <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8 text-center">Gen-AI Workshops</h1>
       <p className="text-gray-700 text-center mb-12 text-lg max-w-2xl mx-auto">
-        Join our hands-on Gen-AI workshops designed for all levels. Whether you’re just starting or looking to master advanced AI concepts, we have the right workshop for you.
+        Join our hands-on Gen-AI workshops designed for all levels. Whether you're just starting or looking to master advanced AI concepts, we have the right workshop for you.
       </p>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-         {workshops.map((ws) => {
+         {workshopConfigs.map((ws) => {
            const isEnrolled = enrolledWorkshops.has(ws.level);
            return (
              <div

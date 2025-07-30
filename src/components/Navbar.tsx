@@ -102,6 +102,9 @@ const Navbar: React.FC = () => {
           </div>
           {user ? (
             <div className="flex items-center space-x-4 ml-4">
+              <Link to="/enrollment-dashboard" className="text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
+                My Dashboard
+              </Link>
               <Link to="/account" className="focus:outline-none">
                 <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center text-lg font-bold text-indigo-700 border-2 border-indigo-400 shadow">
                   {(() => {
@@ -156,6 +159,9 @@ const Navbar: React.FC = () => {
           </div>
           {user ? (
             <div className="mt-2 flex items-center space-x-4">
+              <Link to="/enrollment-dashboard" className="text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
+                My Dashboard
+              </Link>
               <span className="text-indigo-300 font-semibold">{user.displayName || user.email?.split('@')[0] || 'User'}</span>
               <button onClick={handleLogout} className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-base font-semibold">Logout</button>
             </div>

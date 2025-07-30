@@ -1,6 +1,7 @@
 import { initializeApp, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
+import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -25,7 +26,8 @@ try {
 
 // Initialize Firebase services
 const auth = getAuth(app);
-const database = getDatabase(app);
+const database = getDatabase(app); // Realtime Database (for backward compatibility)
+const firestore = getFirestore(app); // Firestore (new database)
 
 // Initialize Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
@@ -33,4 +35,4 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-export { auth, database, googleProvider }; 
+export { auth, database, firestore, googleProvider }; 
