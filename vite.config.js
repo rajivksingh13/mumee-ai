@@ -10,10 +10,26 @@ export default defineConfig({
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: 'assets/[name]-[hash].[ext]'
             }
-        }
+        },
+        // Add cache busting
+        sourcemap: false,
+        // Use default minifier instead of terser
+        minify: 'esbuild',
+        // Force cache invalidation
+        target: 'es2015'
     },
     define: {
         // Ensure environment variables are available at build time
-        'process.env': {}
+        'process.env': {},
+        // Add build timestamp for cache busting
+        __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+    },
+    // Add cache headers for better cache control
+    server: {
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        }
     }
 });

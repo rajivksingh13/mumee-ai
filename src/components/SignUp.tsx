@@ -56,7 +56,9 @@ const SignUp: React.FC = () => {
         
         // Send welcome email via backend
         try {
-          const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
+          const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
+          console.log('📧 Sending welcome email to:', emailUrl);
+          const response = await fetch(emailUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -69,6 +71,8 @@ const SignUp: React.FC = () => {
           });
           if (!response.ok) {
             console.error('Failed to send welcome email');
+          } else {
+            console.log('✅ Welcome email sent successfully');
           }
         } catch (emailError) {
           console.error('Error sending welcome email:', emailError);
@@ -111,7 +115,9 @@ const SignUp: React.FC = () => {
       
       // Send welcome email for Google signup
       try {
-        const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
+        const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
+        console.log('📧 Sending welcome email for Google signup to:', emailUrl);
+        const response = await fetch(emailUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -124,6 +130,8 @@ const SignUp: React.FC = () => {
         });
         if (!response.ok) {
           console.error('Failed to send welcome email for Google signup');
+        } else {
+          console.log('✅ Welcome email for Google signup sent successfully');
         }
       } catch (emailError) {
         console.error('Error sending welcome email for Google signup:', emailError);

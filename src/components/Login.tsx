@@ -69,7 +69,9 @@ const Login: React.FC = () => {
       // Check if user is new (first login)
       if (user && user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime) {
         try {
-          await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME), {
+          const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
+          console.log('📧 Sending welcome email to:', emailUrl);
+          await fetch(emailUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -78,6 +80,7 @@ const Login: React.FC = () => {
               accountType: 'individual',
             }),
           });
+          console.log('✅ Welcome email sent successfully');
         } catch (emailError) {
           console.error('Error sending welcome email for Google login:', emailError);
         }

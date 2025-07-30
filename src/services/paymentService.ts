@@ -30,8 +30,10 @@ class PaymentService {
   testConfiguration(): void {
     console.log('🔧 Testing payment service configuration...');
     console.log('🔑 VITE_RAZORPAY_KEY_ID:', import.meta.env.VITE_RAZORPAY_KEY_ID ? '✅ Configured' : '❌ Not configured');
-    console.log('🌐 VITE_API_URL:', import.meta.env.VITE_API_URL || 'Using default');
-    console.log('🔧 API Base URL:', import.meta.env.VITE_API_URL || 'https://mumee-ai-backend.onrender.com');
+    console.log('🌐 VITE_API_URL (dev):', import.meta.env.VITE_API_URL || 'Not set');
+    console.log('🌐 VITE_API_BASE_URL (prod):', import.meta.env.VITE_API_BASE_URL || 'Not set');
+    console.log('🔧 API Base URL:', API_CONFIG.BASE_URL);
+    console.log('🌍 Current hostname:', window.location.hostname);
   }
 
   /**
