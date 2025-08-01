@@ -23,6 +23,7 @@ export interface User {
   email: string;
   displayName: string;
   photoURL?: string;
+  userType?: string; // Add userType field
   createdAt: Timestamp;
   updatedAt: Timestamp;
   profile?: {
@@ -348,6 +349,22 @@ class DatabaseService {
       } as Payment;
     }
     return null;
+  }
+
+  async getUserPayments(userId: string): Promise<Payment[]> {
+    const paymentsRef = collection(firestore, 'payments');
+    const q = query(
+      paymentsRef,
+      where('userId', '==', userId)
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Payment))
+      .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
   }
 
   // Modules

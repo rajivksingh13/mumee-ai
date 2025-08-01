@@ -15,6 +15,36 @@ const Login: React.FC = () => {
   const redirectTo = searchParams.get('redirect') || '/account';
   const { setUser } = useAuth();
 
+  // Helper function to send welcome email
+  const sendWelcomeEmail = async (userEmail: string, userName: string, accountType: string = 'individual') => {
+    try {
+      const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
+      console.log('📧 Sending welcome email to:', emailUrl);
+      
+      const response = await fetch(emailUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          userName: userName,
+          accountType: accountType,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to send welcome email:', errorText);
+        throw new Error(`Email service error: ${errorText}`);
+      } else {
+        console.log('✅ Welcome email sent successfully');
+        return true;
+      }
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+      throw emailError;
+    }
+  };
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -66,23 +96,13 @@ const Login: React.FC = () => {
       // Set user in context
       setUser(user);
       
-      // Check if user is new (first login)
+      // Check if user is new (first login) and send welcome email
       if (user && user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime) {
         try {
-          const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
-          console.log('📧 Sending welcome email to:', emailUrl);
-          await fetch(emailUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: user.email,
-              userName: user.displayName || 'Google User',
-              accountType: 'individual',
-            }),
-          });
-          console.log('✅ Welcome email sent successfully');
+          await sendWelcomeEmail(user.email!, user.displayName || 'Google User');
         } catch (emailError) {
-          console.error('Error sending welcome email for Google login:', emailError);
+          console.error('Email sending failed for new Google user, but login succeeded:', emailError);
+          // Don't fail the login if email fails, but log it
         }
       }
       

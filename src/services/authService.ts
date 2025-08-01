@@ -17,7 +17,22 @@ export interface AuthError {
   message: string;
 }
 
-export const register = async (email: string, password: string, displayName: string): Promise<FirebaseUser> => {
+// Utility function to remove undefined values from objects
+const removeUndefinedValues = (obj: any): any => {
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined && value !== null) {
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        cleaned[key] = removeUndefinedValues(value);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  }
+  return cleaned;
+};
+
+export const register = async (email: string, password: string, displayName: string, userType: string = 'individual'): Promise<FirebaseUser> => {
   try {
     // Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -26,12 +41,12 @@ export const register = async (email: string, password: string, displayName: str
     // Update display name
     await updateProfile(user, { displayName });
 
-    // Create user record in Firestore
-    await databaseService.createUser({
+    // Prepare user data for Firestore, excluding undefined values
+    const userData: any = {
       uid: user.uid,
       email: user.email!,
       displayName: displayName,
-      photoURL: user.photoURL || undefined,
+      userType: userType, // Store the user type
       profile: {
         firstName: displayName.split(' ')[0] || '',
         lastName: displayName.split(' ').slice(1).join(' ') || '',
@@ -47,7 +62,18 @@ export const register = async (email: string, password: string, displayName: str
         certificatesEarned: 0,
         lastActive: Timestamp.now(),
       }
-    });
+    };
+
+    // Only add photoURL if it exists and is not null/undefined
+    if (user.photoURL) {
+      userData.photoURL = user.photoURL;
+    }
+
+    // Clean up any undefined values before saving
+    const cleanedUserData = removeUndefinedValues(userData);
+
+    // Create user record in Firestore
+    await databaseService.createUser(cleanedUserData);
 
     console.log('✅ User created successfully in both Auth and Firestore');
     return user;
@@ -66,11 +92,12 @@ export const login = async (email: string, password: string): Promise<FirebaseUs
     const existingUser = await databaseService.getUser(user.uid);
     if (!existingUser) {
       console.log('⚠️ User exists in Auth but not in Firestore, creating user record...');
-      await databaseService.createUser({
+      
+      // Prepare user data for Firestore, excluding undefined values
+      const userData: any = {
         uid: user.uid,
         email: user.email!,
         displayName: user.displayName || user.email!.split('@')[0],
-        photoURL: user.photoURL || undefined,
         profile: {
           firstName: user.displayName?.split(' ')[0] || '',
           lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
@@ -85,8 +112,18 @@ export const login = async (email: string, password: string): Promise<FirebaseUs
           completedWorkshops: 0,
           certificatesEarned: 0,
           lastActive: Timestamp.now(),
-        } as any
-      });
+        }
+      };
+
+      // Only add photoURL if it exists and is not null/undefined
+      if (user.photoURL) {
+        userData.photoURL = user.photoURL;
+      }
+
+      // Clean up any undefined values before saving
+      const cleanedUserData = removeUndefinedValues(userData);
+
+      await databaseService.createUser(cleanedUserData);
     } else {
       // Update last active
       await databaseService.updateUser(user.uid, {
@@ -117,11 +154,12 @@ export const signInWithGoogle = async (): Promise<FirebaseUser> => {
     const existingUser = await databaseService.getUser(user.uid);
     if (!existingUser) {
       console.log('⚠️ Google user exists in Auth but not in Firestore, creating user record...');
-      await databaseService.createUser({
+      
+      // Prepare user data for Firestore, excluding undefined values
+      const userData: any = {
         uid: user.uid,
         email: user.email!,
         displayName: user.displayName || user.email!.split('@')[0],
-        photoURL: user.photoURL || undefined,
         profile: {
           firstName: user.displayName?.split(' ')[0] || '',
           lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
@@ -136,8 +174,18 @@ export const signInWithGoogle = async (): Promise<FirebaseUser> => {
           completedWorkshops: 0,
           certificatesEarned: 0,
           lastActive: Timestamp.now(),
-        } as any
-      });
+        }
+      };
+
+      // Only add photoURL if it exists and is not null/undefined
+      if (user.photoURL) {
+        userData.photoURL = user.photoURL;
+      }
+
+      // Clean up any undefined values before saving
+      const cleanedUserData = removeUndefinedValues(userData);
+
+      await databaseService.createUser(cleanedUserData);
     } else {
       // Update last active
       await databaseService.updateUser(user.uid, {

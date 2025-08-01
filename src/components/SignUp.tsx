@@ -14,6 +14,7 @@ const SignUp: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [userType, setUserType] = useState('individual');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,40 @@ const SignUp: React.FC = () => {
     });
     return () => unsubscribe();
   }, [navigate, redirectTo]);
+
+  // Helper function to send welcome email
+  const sendWelcomeEmail = async (userEmail: string, userName: string, accountType: string) => {
+    try {
+      const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
+      console.log('📧 Sending welcome email to:', emailUrl);
+      console.log('📧 Email data:', { email: userEmail, userName, accountType });
+      
+      const response = await fetch(emailUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          userName: userName,
+          accountType: accountType
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to send welcome email:', errorText);
+        throw new Error(`Email service error: ${errorText}`);
+      } else {
+        const result = await response.json();
+        console.log('✅ Welcome email sent successfully:', result);
+        return true;
+      }
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+      throw emailError;
+    }
+  };
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,35 +82,26 @@ const SignUp: React.FC = () => {
         return;
       }
 
+      console.log('🚀 Starting registration process...');
+      console.log('📝 Registration data:', { email, displayName, userType });
+
       // Register user (this will create user in both Auth and Firestore)
-      const user = await register(email, password, displayName);
+      const user = await register(email, password, displayName, userType);
       
       if (user) {
+        console.log('✅ User registered successfully:', user.uid);
+        
         // Set user in context
         setUser(user);
         
-        // Send welcome email via backend
+        // Send welcome email and wait for it to complete
         try {
-          const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
-          console.log('📧 Sending welcome email to:', emailUrl);
-          const response = await fetch(emailUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: email,
-              userName: displayName,
-              accountType: 'individual'
-            }),
-          });
-          if (!response.ok) {
-            console.error('Failed to send welcome email');
-          } else {
-            console.log('✅ Welcome email sent successfully');
-          }
+          console.log('📧 Attempting to send welcome email...');
+          await sendWelcomeEmail(email, displayName, userType);
+          console.log('✅ Email sent successfully, redirecting...');
         } catch (emailError) {
-          console.error('Error sending welcome email:', emailError);
+          console.error('Email sending failed, but user was created:', emailError);
+          // Don't fail the signup if email fails, but log it
         }
         
         // Redirect to the intended page
@@ -113,28 +139,12 @@ const SignUp: React.FC = () => {
       // Set user in context
       setUser(user);
       
-      // Send welcome email for Google signup
+      // Send welcome email for Google signup and wait for it to complete
       try {
-        const emailUrl = buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.WELCOME);
-        console.log('📧 Sending welcome email for Google signup to:', emailUrl);
-        const response = await fetch(emailUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: user.email,
-            userName: user.displayName || 'Google User',
-            accountType: 'individual'
-          }),
-        });
-        if (!response.ok) {
-          console.error('Failed to send welcome email for Google signup');
-        } else {
-          console.log('✅ Welcome email for Google signup sent successfully');
-        }
+        await sendWelcomeEmail(user.email!, user.displayName || 'Google User', 'individual');
       } catch (emailError) {
-        console.error('Error sending welcome email for Google signup:', emailError);
+        console.error('Email sending failed for Google signup, but user was created:', emailError);
+        // Don't fail the signup if email fails, but log it
       }
       
       // Redirect to the intended page
@@ -202,6 +212,22 @@ const SignUp: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
             />
+          </div>
+          <div>
+            <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
+              Account Type
+            </label>
+            <select
+              id="userType"
+              name="userType"
+              required
+              value={userType}
+              onChange={(e) => setUserType(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium shadow"
+            >
+              <option value="individual">Individual</option>
+              <option value="corporate">Corporate</option>
+            </select>
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">

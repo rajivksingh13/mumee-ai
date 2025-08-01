@@ -19,7 +19,9 @@ const offerings = [
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
@@ -30,18 +32,22 @@ const Navbar: React.FC = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdown(false);
       }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
     }
-    if (dropdown) {
+    if (dropdown || userMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [dropdown]);
+  }, [dropdown, userMenuOpen]);
 
   // Close dropdown on route change
   useEffect(() => {
     setDropdown(false);
+    setUserMenuOpen(false);
     setOpen(false);
   }, [location]);
 
@@ -49,6 +55,22 @@ const Navbar: React.FC = () => {
     await logout();
     setUser(null);
     navigate('/');
+  };
+
+  const getUserInitials = () => {
+    if (user?.displayName) {
+      const names = user.displayName.trim().split(' ');
+      if (names.length === 1) return names[0][0].toUpperCase();
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    } else if (user?.email) {
+      return user.email.slice(0, 2).toUpperCase();
+    } else {
+      return 'U';
+    }
+  };
+
+  const getUserDisplayName = () => {
+    return user?.displayName || user?.email?.split('@')[0] || 'User';
   };
 
   return (
@@ -101,26 +123,71 @@ const Navbar: React.FC = () => {
             </div>
           </div>
           {user ? (
-            <div className="flex items-center space-x-4 ml-4">
-              <Link to="/enrollment-dashboard" className="text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
-                My Dashboard
-              </Link>
-              <Link to="/account" className="focus:outline-none">
-                <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center text-lg font-bold text-indigo-700 border-2 border-indigo-400 shadow">
-                  {(() => {
-                    if (user.displayName) {
-                      const names = user.displayName.trim().split(' ');
-                      if (names.length === 1) return names[0][0].toUpperCase();
-                      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
-                    } else if (user.email) {
-                      return user.email.slice(0, 2).toUpperCase();
-                    } else {
-                      return 'U';
-                    }
-                  })()}
+            <div className="relative ml-4" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center space-x-2 text-gray-200 hover:text-indigo-400 focus:outline-none rounded-lg p-2 transition-colors"
+                aria-haspopup="true"
+                aria-expanded={userMenuOpen}
+              >
+                <div className="w-8 h-8 rounded-full bg-indigo-200 flex items-center justify-center text-sm font-bold text-indigo-700 border-2 border-indigo-400 shadow">
+                  {getUserInitials()}
                 </div>
-              </Link>
-              <button onClick={handleLogout} className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm font-semibold">Logout</button>
+                <span className="text-sm font-medium hidden lg:block">{getUserDisplayName()}</span>
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div
+                className={`absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top-right ${userMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
+                role="menu"
+                aria-label="User menu"
+              >
+                <div className="px-4 py-3 border-b border-gray-800">
+                  <p className="text-sm text-gray-200 font-medium">{getUserDisplayName()}</p>
+                  <p className="text-xs text-gray-400">{user.email}</p>
+                </div>
+                <div className="py-1">
+                  <Link
+                    to="/account"
+                    className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 hover:text-indigo-400 transition-colors"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      My Account
+                    </div>
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 hover:text-indigo-400 transition-colors"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Settings
+                    </div>
+                  </Link>
+                  <div className="border-t border-gray-800">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sign Out
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -158,12 +225,27 @@ const Navbar: React.FC = () => {
             </div>
           </div>
           {user ? (
-            <div className="mt-2 flex items-center space-x-4">
-              <Link to="/enrollment-dashboard" className="text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
-                My Dashboard
+            <div className="mt-2 space-y-2">
+              <div className="px-3 py-2 border-b border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-indigo-200 flex items-center justify-center text-sm font-bold text-indigo-700 border-2 border-indigo-400 shadow">
+                    {getUserInitials()}
+                  </div>
+                  <div>
+                    <p className="text-gray-200 font-medium">{getUserDisplayName()}</p>
+                    <p className="text-xs text-gray-400">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+              <Link to="/account" className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
+                My Account
               </Link>
-              <span className="text-indigo-300 font-semibold">{user.displayName || user.email?.split('@')[0] || 'User'}</span>
-              <button onClick={handleLogout} className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-base font-semibold">Logout</button>
+              <Link to="/settings" className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
+                Settings
+              </Link>
+              <button onClick={handleLogout} className="w-full text-left text-red-400 hover:text-red-300 px-3 py-2 rounded-md text-base font-medium">
+                Sign Out
+              </button>
             </div>
           ) : (
             <>

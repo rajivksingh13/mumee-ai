@@ -1,48 +1,103 @@
 import express from 'express';
-import { sendEmail } from '../utils/emailService';
+import { sendEmail, validateEmail, getEmailProvider, isSupportedProvider } from '../utils/emailService';
 
 const router = express.Router();
 
-// Test endpoint to check API key configuration
+// Test configuration endpoint
 router.get('/test-config', async (req, res) => {
   try {
     const apiKey = process.env.RESEND_API_KEY;
     
     if (!apiKey) {
-      return res.status(500).json({ 
-        error: 'API key not configured',
-        message: 'RESEND_API_KEY environment variable is not set'
+      return res.status(500).json({
+        error: 'RESEND_API_KEY not configured',
+        apiKeyConfigured: false
       });
     }
 
-    // Test the API key by making a simple request to Resend
-    const response = await fetch('https://api.resend.com/domains', {
+    // Test API key by fetching domains
+    const domainsResponse = await fetch('https://api.resend.com/domains', {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-      },
+        'Content-Type': 'application/json'
+      }
     });
 
-    if (response.ok) {
-      const domains = await response.json();
-      res.json({ 
-        success: true,
-        message: 'API key is working',
+    if (domainsResponse.ok) {
+      const domains = await domainsResponse.json();
+      return res.json({
+        apiKeyConfigured: true,
         domains: domains.data || [],
-        apiKeyConfigured: true
+        message: 'Configuration check successful'
       });
     } else {
-      const error = await response.text();
-      res.status(400).json({ 
-        error: 'API key is invalid',
-        message: error,
-        apiKeyConfigured: true
+      const error = await domainsResponse.text();
+      return res.status(500).json({
+        error: `API key test failed: ${error}`,
+        apiKeyConfigured: false
       });
     }
   } catch (error) {
-    console.error('Config test failed:', error);
+    console.error('Configuration check error:', error);
+    return res.status(500).json({
+      error: 'Configuration check failed',
+      apiKeyConfigured: false
+    });
+  }
+});
+
+// Test email sending endpoint
+router.post('/test-send', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email address is required' });
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    const provider = getEmailProvider(email);
+    const isSupported = isSupportedProvider(email);
+
+    console.log(`🧪 Testing email to: ${email} (Provider: ${provider}, Supported: ${isSupported})`);
+
+    const subject = 'Test Email from titliAI';
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Test Email</title>
+        </head>
+        <body>
+          <h1>Test Email</h1>
+          <p>This is a test email to verify email delivery to ${provider}.</p>
+          <p>Email: ${email}</p>
+          <p>Provider: ${provider}</p>
+          <p>Supported: ${isSupported ? 'Yes' : 'No'}</p>
+          <p>Timestamp: ${new Date().toISOString()}</p>
+        </body>
+      </html>
+    `;
+
+    const result = await sendEmail(email, subject, html);
+    
+    res.json({ 
+      success: true, 
+      message: 'Test email sent successfully',
+      emailId: result.id,
+      provider,
+      isSupported
+    });
+  } catch (error) {
+    console.error('Test email failed:', error);
     res.status(500).json({ 
-      error: 'Failed to test configuration',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Failed to send test email',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -56,8 +111,20 @@ router.post('/send', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Validate email format
+    if (!validateEmail(to)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    const provider = getEmailProvider(to);
+    console.log(`📧 Sending email to: ${to} (Provider: ${provider})`);
+
     await sendEmail(to, subject, html);
-    res.json({ success: true });
+    res.json({ 
+      success: true,
+      provider,
+      isSupported: isSupportedProvider(to)
+    });
   } catch (error) {
     console.error('Error sending email:', error);
     res.status(500).json({ error: 'Failed to send email' });
@@ -72,6 +139,16 @@ router.post('/welcome', async (req, res) => {
     if (!email || !userName) {
       return res.status(400).json({ error: 'Email and userName are required' });
     }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    const provider = getEmailProvider(email);
+    const isSupported = isSupportedProvider(email);
+
+    console.log(`📧 Sending welcome email to: ${email} (Provider: ${provider}, Supported: ${isSupported})`);
 
     const subject = 'Welcome to titliAI – Your AI Journey Begins!';
     const html = `
@@ -182,14 +259,15 @@ router.post('/welcome', async (req, res) => {
               <p class="subtitle">Empowering Your Future with AI</p>
             </div>
             <h2 class="welcome-text">Hello ${userName}!</h2>
-            <p>Thank you for joining <strong>titliAI</strong>! We're thrilled to have you as part of our AI-driven community. Your account has been successfully created and you’re ready to explore the world of Artificial Intelligence.</p>
+            <p>Thank you for joining <strong>titliAI</strong>! We're thrilled to have you as part of our AI-driven community. Your account has been successfully created and you're ready to explore the world of Artificial Intelligence.</p>
             <div class="account-details">
               <h3>Your Account Details</h3>
               <p><strong>Account Type:</strong> ${accountType}</p>
               <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Provider:</strong> ${provider}</p>
               <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</p>
             </div>
-            <h3>What’s Next?</h3>
+            <h3>What's Next?</h3>
             <ul>
               <li>🎓 <strong>Join AI Workshops:</strong> Foundation & Advanced levels</li>
               <li>💡 <strong>Consult with AI Experts</strong></li>
@@ -222,8 +300,13 @@ router.post('/welcome', async (req, res) => {
       </html>
     `;
 
-    await sendEmail(email, subject, html);
-    res.json({ message: 'Welcome email sent successfully' });
+    const result = await sendEmail(email, subject, html);
+    res.json({ 
+      message: 'Welcome email sent successfully',
+      emailId: result.id,
+      provider,
+      isSupported
+    });
   } catch (error) {
     console.error('Error sending welcome email:', error);
     res.status(500).json({ 

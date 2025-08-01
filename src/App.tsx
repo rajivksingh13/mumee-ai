@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SignUp from './components/SignUp';
@@ -10,11 +10,10 @@ import Workshops from './components/Workshops';
 import FoundationWorkshop from './components/FoundationWorkshop';
 import BeginnerWorkshop from './components/BeginnerWorkshop';
 import SearchPage from './components/SearchPage';
-import AccountPage from './components/AccountPage';
+import AccountPage, { PaymentDetailsPage } from './components/AccountPage';
 import ProfilePage from './components/ProfilePage';
-import { PaymentDetailsPage } from './components/AccountPage';
+import SettingsPage from './components/SettingsPage';
 import AdvanceWorkshop from './components/AdvanceWorkshop';
-import EnrollmentDashboard from './components/EnrollmentDashboard';
 
 // Placeholder components for each page
 const Home = () => (
@@ -238,7 +237,8 @@ const App: React.FC = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/payments" element={<PaymentDetailsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/enrollment-dashboard" element={<EnrollmentDashboard />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/enrollment-dashboard" element={<Navigate to="/account" replace />} />
       </Routes>
       <Footer />
     </Router>

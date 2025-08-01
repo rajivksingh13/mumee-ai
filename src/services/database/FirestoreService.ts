@@ -171,15 +171,31 @@ export class FirestoreService implements IDatabaseService {
     const enrollmentsRef = collection(firestore, 'enrollments');
     const q = query(
       enrollmentsRef, 
-      where('userId', '==', userId),
-      orderBy('enrolledAt', 'desc')
+      where('userId', '==', userId)
     );
-    const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => DataConverter.normalizeEnrollment({
-      id: doc.id,
-      ...doc.data()
-    } as Enrollment));
+    try {
+      const querySnapshot = await getDocs(q);
+      
+      // Sort in memory instead of using orderBy to avoid composite index requirement
+      const enrollments = querySnapshot.docs
+        .map(doc => {
+          return DataConverter.normalizeEnrollment({
+            id: doc.id,
+            ...doc.data()
+          } as Enrollment);
+        })
+        .sort((a, b) => {
+          const aTime = (a.enrolledAt as any)?.toMillis?.() || (a.enrolledAt as any)?.getTime?.() || 0;
+          const bTime = (b.enrolledAt as any)?.toMillis?.() || (b.enrolledAt as any)?.getTime?.() || 0;
+          return bTime - aTime; // Sort by newest first
+        });
+      
+      return enrollments;
+    } catch (error) {
+      console.error('❌ FirestoreService: Error getting enrollments:', error);
+      throw error;
+    }
   }
 
   async getEnrollment(enrollmentId: string): Promise<Enrollment | null> {
@@ -210,12 +226,15 @@ export class FirestoreService implements IDatabaseService {
     const q = query(
       enrollmentsRef,
       where('userId', '==', userId),
-      where('workshopId', '==', workshopId),
-      where('status', 'in', ['active', 'completed'])
+      where('workshopId', '==', workshopId)
     );
     const querySnapshot = await getDocs(q);
     
-    return !querySnapshot.empty;
+    // Filter in memory instead of using where clause to avoid composite index
+    return querySnapshot.docs.some(doc => {
+      const data = doc.data();
+      return data.status === 'active' || data.status === 'completed';
+    });
   }
 
   // Payment operations
@@ -253,15 +272,31 @@ export class FirestoreService implements IDatabaseService {
     const paymentsRef = collection(firestore, 'payments');
     const q = query(
       paymentsRef,
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', userId)
     );
-    const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => DataConverter.normalizePayment({
-      id: doc.id,
-      ...doc.data()
-    } as Payment));
+    try {
+      const querySnapshot = await getDocs(q);
+      
+      // Sort in memory instead of using orderBy to avoid composite index requirement
+      const payments = querySnapshot.docs
+        .map(doc => {
+          return DataConverter.normalizePayment({
+            id: doc.id,
+            ...doc.data()
+          } as Payment);
+        })
+        .sort((a, b) => {
+          const aTime = (a.createdAt as any)?.toMillis?.() || (a.createdAt as any)?.getTime?.() || 0;
+          const bTime = (b.createdAt as any)?.toMillis?.() || (b.createdAt as any)?.getTime?.() || 0;
+          return bTime - aTime; // Sort by newest first
+        });
+      
+      return payments;
+    } catch (error) {
+      console.error('❌ FirestoreService: Error getting payments:', error);
+      throw error;
+    }
   }
 
   // Module operations
