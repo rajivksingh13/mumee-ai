@@ -20,11 +20,13 @@ router.get('/detect', async (req, res) => {
     
     // Clean up IP address (remove IPv6 prefix and port)
     if (clientIP) {
+      let ipString = Array.isArray(clientIP) ? clientIP[0] : clientIP;
+      
       // Handle x-forwarded-for which can contain multiple IPs
-      if (clientIP.includes(',')) {
-        clientIP = clientIP.split(',')[0].trim();
+      if (ipString.includes(',')) {
+        ipString = ipString.split(',')[0].trim();
       }
-      clientIP = clientIP.toString().replace(/^::ffff:/, '').split(':')[0];
+      clientIP = ipString.toString().replace(/^::ffff:/, '').split(':')[0];
     }
     
     console.log('🔍 Client IP detected:', clientIP);
@@ -130,14 +132,25 @@ router.get('/detect', async (req, res) => {
 
 // Test endpoint to check IP detection
 router.get('/test-ip', (req, res) => {
-  const clientIP = req.headers['x-forwarded-for'] || 
-                   req.headers['x-real-ip'] || 
-                   req.headers['x-client-ip'] ||
-                   req.headers['cf-connecting-ip'] ||
-                   req.headers['x-forwarded'] ||
-                   req.connection.remoteAddress || 
-                   req.socket.remoteAddress || 
-                   req.ip;
+  let clientIP = req.headers['x-forwarded-for'] || 
+                 req.headers['x-real-ip'] || 
+                 req.headers['x-client-ip'] ||
+                 req.headers['cf-connecting-ip'] ||
+                 req.headers['x-forwarded'] ||
+                 req.connection.remoteAddress || 
+                 req.socket.remoteAddress || 
+                 req.ip;
+  
+  // Clean up IP address
+  if (clientIP) {
+    let ipString = Array.isArray(clientIP) ? clientIP[0] : clientIP;
+    
+    // Handle x-forwarded-for which can contain multiple IPs
+    if (ipString.includes(',')) {
+      ipString = ipString.split(',')[0].trim();
+    }
+    clientIP = ipString.toString().replace(/^::ffff:/, '').split(':')[0];
+  }
   
   res.json({
     clientIP,
