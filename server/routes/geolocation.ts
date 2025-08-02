@@ -8,7 +8,38 @@ const router = express.Router();
  */
 router.get('/detect', async (req, res) => {
   try {
-    const apis = [
+    // Get client's IP address (try multiple headers for different proxy setups)
+    let clientIP = req.headers['x-forwarded-for'] || 
+                   req.headers['x-real-ip'] || 
+                   req.headers['x-client-ip'] ||
+                   req.headers['cf-connecting-ip'] ||
+                   req.headers['x-forwarded'] ||
+                   req.connection.remoteAddress || 
+                   req.socket.remoteAddress || 
+                   req.ip;
+    
+    // Clean up IP address (remove IPv6 prefix and port)
+    if (clientIP) {
+      // Handle x-forwarded-for which can contain multiple IPs
+      if (clientIP.includes(',')) {
+        clientIP = clientIP.split(',')[0].trim();
+      }
+      clientIP = clientIP.toString().replace(/^::ffff:/, '').split(':')[0];
+    }
+    
+    console.log('🔍 Client IP detected:', clientIP);
+    console.log('🔍 Request headers:', {
+      'x-forwarded-for': req.headers['x-forwarded-for'],
+      'x-real-ip': req.headers['x-real-ip'],
+      'x-client-ip': req.headers['x-client-ip'],
+      'cf-connecting-ip': req.headers['cf-connecting-ip']
+    });
+    
+    // Use client IP if available, otherwise fall back to default APIs
+    const apis = clientIP && clientIP !== 'undefined' && clientIP !== 'null' ? [
+      `https://ipapi.co/${clientIP}/json/`,
+      `https://ipinfo.io/${clientIP}/json`
+    ] : [
       'https://ipapi.co/json/',
       'https://ipinfo.io/json'
     ];
@@ -68,12 +99,14 @@ router.get('/detect', async (req, res) => {
     }
 
     if (countryCode && geolocationData) {
+      console.log('✅ Geolocation API success:', geolocationData);
       res.json({
         success: true,
         data: geolocationData
       });
     } else {
       // Fallback to IN (India) if no API works
+      console.log('🔄 Geolocation API fallback to IN (India)');
       res.json({
         success: true,
         data: {
@@ -93,6 +126,29 @@ router.get('/detect', async (req, res) => {
       }
     });
   }
+});
+
+// Test endpoint to check IP detection
+router.get('/test-ip', (req, res) => {
+  const clientIP = req.headers['x-forwarded-for'] || 
+                   req.headers['x-real-ip'] || 
+                   req.headers['x-client-ip'] ||
+                   req.headers['cf-connecting-ip'] ||
+                   req.headers['x-forwarded'] ||
+                   req.connection.remoteAddress || 
+                   req.socket.remoteAddress || 
+                   req.ip;
+  
+  res.json({
+    clientIP,
+    headers: {
+      'x-forwarded-for': req.headers['x-forwarded-for'],
+      'x-real-ip': req.headers['x-real-ip'],
+      'x-client-ip': req.headers['x-client-ip'],
+      'cf-connecting-ip': req.headers['cf-connecting-ip'],
+      'x-forwarded': req.headers['x-forwarded']
+    }
+  });
 });
 
 export default router; 

@@ -43,7 +43,15 @@ const Workshops: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   // Get user location for pricing (works for both logged-in and non-logged-in users)
-  const { countryCode, loading: locationLoading } = useGeolocation();
+  const { countryCode, loading: locationLoading, location } = useGeolocation();
+  
+  // Debug logging
+  console.log('🔍 Workshops - Geolocation Debug:', {
+    countryCode,
+    locationLoading,
+    location,
+    isIndianUser: countryCode === 'IN'
+  });
 
   // Check which workshops the user is enrolled in from Firestore
   useEffect(() => {
@@ -105,6 +113,16 @@ const Workshops: React.FC = () => {
            const pricing = locationLoading || !countryCode 
              ? { formattedPrice: 'Detecting...', currency: 'LOADING' }
              : getWorkshopPricing(ws.level as 'beginner' | 'foundation' | 'advanced', countryCode);
+           
+           // Debug pricing calculation
+           if (!locationLoading && countryCode) {
+             console.log(`💰 ${ws.level} Workshop Pricing Debug:`, {
+               level: ws.level,
+               countryCode,
+               pricing,
+               isIndianUser: countryCode === 'IN'
+             });
+           }
            
            return (
              <div

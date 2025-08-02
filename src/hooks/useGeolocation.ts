@@ -60,6 +60,10 @@ export const useGeolocation = () => {
           if (result.success && result.data) {
             const geolocationData = result.data;
             console.log('✅ Location detected:', geolocationData);
+            console.log('🔍 Country Code Check:', {
+              countryCode: geolocationData.countryCode,
+              isIndianUser: geolocationData.countryCode === 'IN'
+            });
             setLocation(geolocationData);
             
             // Save geolocation data to Firestore for logged-in users
@@ -92,6 +96,15 @@ export const useGeolocation = () => {
 
     detectUserLocation();
   }, [user]);
+
+  // Debug logging for geolocation hook
+  console.log('🌍 useGeolocation Debug:', {
+    location,
+    loading,
+    error,
+    countryCode: location?.countryCode || null,
+    isIndianUser: location?.countryCode === 'IN'
+  });
 
   return {
     location,

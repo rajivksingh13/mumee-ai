@@ -26,6 +26,12 @@ export const getPriceDisplay = (inrPrice: number, userCountryCode?: string): Pri
   // Default to INR if country code is not available
   const isIndianUser = userCountryCode === 'IN';
   
+  console.log('💰 getPriceDisplay Debug:', {
+    inrPrice,
+    userCountryCode,
+    isIndianUser
+  });
+  
   if (isIndianUser) {
     return {
       amount: inrPrice,
