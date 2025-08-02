@@ -12,7 +12,7 @@ import BeginnerWorkshop from './components/BeginnerWorkshop';
 import SearchPage from './components/SearchPage';
 import AccountPage, { PaymentDetailsPage } from './components/AccountPage';
 import ProfilePage from './components/ProfilePage';
-import SettingsPage from './components/SettingsPage';
+
 import AdvanceWorkshop from './components/AdvanceWorkshop';
 
 // Placeholder components for each page
@@ -237,7 +237,6 @@ const App: React.FC = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/payments" element={<PaymentDetailsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/enrollment-dashboard" element={<Navigate to="/account" replace />} />
       </Routes>
       <Footer />

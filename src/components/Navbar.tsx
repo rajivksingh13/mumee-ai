@@ -4,16 +4,33 @@ import { useAuth } from '../contexts/AuthContext';
 import { logout } from '../services/authService';
 import SearchBar from './SearchBar';
 import ButterflyLogo from './ButterflyLogo';
+import CountryFlag from './CountryFlag';
 
 const offerings = [
   { to: '/workshops', label: 'AI Workshops' },
-  { to: '/consultant', label: 'AI Consultant' },
-  { to: '/library', label: 'AI Library' },
-  { to: '/labs', label: 'AI Labs' },
-  { to: '/marketplace', label: 'AI-Agents Marketplace' },
-  { to: '/training', label: 'AI Training' },
-  { to: '/certifications', label: 'AI Certifications' },
-  { to: '/blogs', label: 'AI Blogs' },
+  // Hidden offerings - will be enabled later
+  // { to: '/consultant', label: 'AI Consultant' },
+  // { to: '/library', label: 'AI Library' },
+  // { to: '/labs', label: 'AI Labs' },
+  // { to: '/marketplace', label: 'AI-Agents Marketplace' },
+  // { to: '/training', label: 'AI Training' },
+  // { to: '/certifications', label: 'AI Certifications' },
+  // { to: '/blogs', label: 'AI Blogs' },
+];
+
+const techBlogs = [
+  { 
+    name: 'Techno-Pulse', 
+    url: 'https://www.techno-pulse.com/', 
+    description: 'Technology Simplified',
+    icon: '🔗'
+  },
+  { 
+    name: 'TeachLea', 
+    url: 'https://www.teachlea.com/', 
+    description: 'Learning Platform',
+    icon: '📚'
+  }
 ];
 
 const Navbar: React.FC = () => {
@@ -103,8 +120,8 @@ const Navbar: React.FC = () => {
             </button>
             <div
               id="offerings-menu"
-              className={`absolute left-0 mt-2 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top ${dropdown ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
-              style={{ minWidth: '14rem' }}
+              className={`absolute left-0 mt-2 w-64 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top ${dropdown ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
+              style={{ minWidth: '16rem' }}
               role="menu"
               aria-label="Offerings"
             >
@@ -120,6 +137,35 @@ const Navbar: React.FC = () => {
                   {link.label}
                 </Link>
               ))}
+              {/* Tech Blogs Section */}
+              <div className="border-t border-gray-700 mt-2 pt-2">
+                <div className="px-4 py-2 text-xs text-gray-400 font-medium">Tech Blogs</div>
+                {techBlogs.map(blog => (
+                  <a
+                    key={blog.name}
+                    href={blog.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-2 text-gray-200 hover:bg-gray-800 hover:text-indigo-400 text-sm rounded transition-colors group"
+                    role="menuitem"
+                    tabIndex={dropdown ? 0 : -1}
+                    onClick={() => setDropdown(false)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="mr-2 text-sm">{blog.icon}</span>
+                        <div>
+                          <div className="font-medium">{blog.name}</div>
+                          <div className="text-xs text-gray-400">{blog.description}</div>
+                        </div>
+                      </div>
+                      <svg className="w-3 h-3 text-gray-400 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
           {user ? (
@@ -160,19 +206,6 @@ const Navbar: React.FC = () => {
                       My Account
                     </div>
                   </Link>
-                  <Link
-                    to="/settings"
-                    className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 hover:text-indigo-400 transition-colors"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Settings
-                    </div>
-                  </Link>
                   <div className="border-t border-gray-800">
                     <button
                       onClick={handleLogout}
@@ -195,8 +228,12 @@ const Navbar: React.FC = () => {
               <Link to="/signup" className="ml-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-semibold">Sign Up</Link>
             </>
           )}
+          <div className="ml-4">
+            <CountryFlag isLoggedIn={!!user} />
+          </div>
         </div>
-        <div className="md:hidden flex items-center">
+        <div className="md:hidden flex items-center gap-2">
+          <CountryFlag isLoggedIn={!!user} />
           <button onClick={() => setOpen(!open)} className="text-gray-200 focus:outline-none">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               {open ? (
@@ -222,6 +259,28 @@ const Navbar: React.FC = () => {
                   {link.label}
                 </Link>
               ))}
+              {/* Mobile Tech Blogs Section */}
+              <div className="border-t border-gray-700 mt-2 pt-2">
+                <div className="text-gray-400 px-3 py-1 text-sm font-medium">Tech Blogs</div>
+                {techBlogs.map(blog => (
+                  <a
+                    key={blog.name}
+                    href={blog.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium"
+                    onClick={() => setOpen(false)}
+                  >
+                    <div className="flex items-center">
+                      <span className="mr-2">{blog.icon}</span>
+                      <div>
+                        <div>{blog.name}</div>
+                        <div className="text-xs text-gray-400">{blog.description}</div>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
           {user ? (
@@ -239,9 +298,6 @@ const Navbar: React.FC = () => {
               </div>
               <Link to="/account" className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
                 My Account
-              </Link>
-              <Link to="/settings" className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
-                Settings
               </Link>
               <button onClick={handleLogout} className="w-full text-left text-red-400 hover:text-red-300 px-3 py-2 rounded-md text-base font-medium">
                 Sign Out

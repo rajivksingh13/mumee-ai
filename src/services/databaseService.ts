@@ -47,6 +47,16 @@ export interface User {
     certificatesEarned?: number;
     lastActive?: Timestamp;
   };
+  // Geolocation data for analytics
+  geolocation?: {
+    countryCode: string;
+    countryName?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+    detectedAt: Timestamp;
+    ipAddress?: string;
+  };
 }
 
 export interface Workshop {
@@ -217,6 +227,59 @@ class DatabaseService {
       ...updates,
       updatedAt: Timestamp.now()
     });
+  }
+
+  // Update user geolocation data
+  async updateUserGeolocation(userId: string, geolocationData: {
+    countryCode: string;
+    countryName?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+    ipAddress?: string;
+  }): Promise<void> {
+    const userRef = doc(firestore, 'users', userId);
+    await updateDoc(userRef, {
+      geolocation: {
+        ...geolocationData,
+        detectedAt: Timestamp.now()
+      },
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  // Get user geolocation data
+  async getUserGeolocation(userId: string): Promise<User['geolocation'] | null> {
+    const user = await this.getUser(userId);
+    return user?.geolocation || null;
+  }
+
+  // Get analytics by country
+  async getUsersByCountry(): Promise<{ [countryCode: string]: number }> {
+    const usersRef = collection(firestore, 'users');
+    const querySnapshot = await getDocs(usersRef);
+    
+    const countryStats: { [countryCode: string]: number } = {};
+    
+    querySnapshot.docs.forEach(doc => {
+      const userData = doc.data() as User;
+      if (userData.geolocation?.countryCode) {
+        const countryCode = userData.geolocation.countryCode;
+        countryStats[countryCode] = (countryStats[countryCode] || 0) + 1;
+      }
+    });
+    
+    return countryStats;
+  }
+
+  // Get top countries by user count
+  async getTopCountries(limit: number = 10): Promise<Array<{ countryCode: string; count: number; countryName?: string }>> {
+    const countryStats = await this.getUsersByCountry();
+    
+    return Object.entries(countryStats)
+      .map(([countryCode, count]) => ({ countryCode, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
   }
 
   // Workshops
