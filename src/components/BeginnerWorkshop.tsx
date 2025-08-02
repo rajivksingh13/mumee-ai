@@ -23,6 +23,8 @@ const BeginnerWorkshop: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasAutoEnrolled, setHasAutoEnrolled] = useState(false);
+  
+
 
   // Get workshop ID from the workshop data
   const workshopId = workshop?.id || 'beginner-workshop';

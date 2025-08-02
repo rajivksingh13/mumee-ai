@@ -2,32 +2,50 @@ import { Timestamp } from 'firebase/firestore';
 
 // Common interfaces that work across all databases
 export interface User {
+  id: string;
   uid: string;
   email: string;
-  displayName: string;
+  displayName?: string;
   photoURL?: string;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
+  
+  // Profile information
   profile?: {
     firstName?: string;
     lastName?: string;
     phone?: string;
-    dateOfBirth?: Date;
-    location?: string;
     bio?: string;
-    interests?: string[];
+    location?: string;
     skillLevel?: 'beginner' | 'intermediate' | 'advanced';
   };
+  
+  // Geolocation data for currency detection
+  geolocation?: {
+    countryCode: string;
+    countryName?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+    ipAddress?: string;
+    detectedAt: Timestamp | Date;
+  };
+  
+  // User preferences
   preferences?: {
     emailNotifications: boolean;
     marketingEmails: boolean;
     newsletter: boolean;
+    currency: 'INR' | 'USD' | 'EUR' | 'GBP'; // User's preferred currency
   };
+  
+  // User statistics
   stats?: {
     totalEnrollments: number;
     completedWorkshops: number;
     certificatesEarned: number;
-    lastActive: Timestamp | Date;
+    totalSpent: number;
+    preferredCurrency: string;
   };
 }
 
@@ -74,15 +92,31 @@ export interface Enrollment {
   enrolledAt: Timestamp | Date;
   completedAt?: Timestamp | Date;
   expiresAt?: Timestamp | Date;
+  
+  // Payment information with currency details
   payment: {
     amount: number;
     currency: string;
+    originalAmount?: number; // Original amount in base currency
+    originalCurrency?: string; // Original currency
+    exchangeRate?: number; // Exchange rate used
     paymentId?: string;
     orderId?: string;
     status: 'pending' | 'completed' | 'failed' | 'refunded';
     paymentMethod: 'razorpay' | 'free';
     paidAt?: Timestamp | Date;
+    
+    // User location at enrollment
+    userLocation?: {
+      countryCode: string;
+      countryName?: string;
+      region?: string;
+      city?: string;
+      timezone?: string;
+      ipAddress?: string;
+    };
   };
+  
   progress: {
     currentModule: number;
     completedModules: number[];
@@ -90,6 +124,7 @@ export interface Enrollment {
     percentageComplete: number;
     lastAccessed: Timestamp | Date;
   };
+  
   certificate?: {
     issued: boolean;
     certificateId?: string;
@@ -103,10 +138,27 @@ export interface Payment {
   userId: string;
   workshopId: string;
   enrollmentId: string;
+  
+  // Payment details with currency information
   amount: number;
   currency: string;
+  originalAmount?: number; // Original amount in base currency (INR)
+  originalCurrency?: string; // Original currency (INR)
+  exchangeRate?: number; // Exchange rate used for conversion
   status: 'pending' | 'completed' | 'failed' | 'refunded';
   paymentMethod: 'razorpay' | 'free';
+  
+  // User location at time of payment
+  userLocation?: {
+    countryCode: string;
+    countryName?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+    ipAddress?: string;
+  };
+  
+  // Razorpay specific details
   razorpay?: {
     paymentId: string;
     orderId: string;
@@ -116,6 +168,8 @@ export interface Payment {
     cardId?: string;
     method?: string;
   };
+  
+  // Timestamps
   createdAt: Timestamp | Date;
   paidAt?: Timestamp | Date;
   refundedAt?: Timestamp | Date;
@@ -183,6 +237,7 @@ export interface IDatabaseService {
   getPayment(paymentId: string): Promise<Payment | null>;
   updatePayment(paymentId: string, updates: Partial<Payment>): Promise<void>;
   getUserPayments(userId: string): Promise<Payment[]>;
+  getAllPayments(): Promise<Payment[]>;
 
   // Module operations
   createModule(moduleData: Omit<Module, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;
@@ -271,7 +326,8 @@ export class DataConverter {
       updatedAt: this.toTimestamp(user.updatedAt),
       stats: user.stats ? {
         ...user.stats,
-        lastActive: this.toTimestamp(user.stats.lastActive)
+        totalSpent: user.stats.totalSpent || 0,
+        preferredCurrency: user.stats.preferredCurrency || 'INR'
       } : undefined
     };
   }

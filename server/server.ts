@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import paymentRoutes from './routes/payment';
 import emailRoutes from './routes/email';
+import geolocationRoutes from './routes/geolocation';
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.get('/api/test-cors', (req, res) => {
 // Routes
 app.use('/api/payment', paymentRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/geolocation', geolocationRoutes);
 
 // Config endpoint to serve Firebase configuration
 app.get('/api/config', (req, res) => {

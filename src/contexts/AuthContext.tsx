@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Create new user profile
         await db.createUser({
+          id: firebaseUser.uid, // Add the missing id property
           uid: firebaseUser.uid,
           email: firebaseUser.email || '',
           displayName: firebaseUser.displayName || '',
@@ -46,19 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: '',
             location: '',
             bio: '',
-            interests: [],
             skillLevel: 'beginner'
           },
           preferences: {
             emailNotifications: true,
             marketingEmails: true,
-            newsletter: true
+            newsletter: true,
+            currency: 'INR'
           },
           stats: {
             totalEnrollments: 0,
             completedWorkshops: 0,
             certificatesEarned: 0,
-            lastActive: new Date()
+            totalSpent: 0,
+            preferredCurrency: 'INR'
           } as any
         });
         
@@ -66,13 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.log('ℹ️ User profile already exists in Firestore');
         
-        // Update last active timestamp
+        // Update user stats
         await db.updateUser(firebaseUser.uid, {
           stats: {
             totalEnrollments: existingUser.stats?.totalEnrollments || 0,
             completedWorkshops: existingUser.stats?.completedWorkshops || 0,
             certificatesEarned: existingUser.stats?.certificatesEarned || 0,
-            lastActive: new Date()
+            totalSpent: existingUser.stats?.totalSpent || 0,
+            preferredCurrency: existingUser.stats?.preferredCurrency || 'INR'
           }
         });
       }

@@ -19,43 +19,50 @@ import { firestore } from '../config/firebase';
 
 // Types
 export interface User {
+  id: string;
   uid: string;
   email: string;
-  displayName: string;
+  displayName?: string;
   photoURL?: string;
-  userType?: string; // Add userType field
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  
+  // Profile information
   profile?: {
     firstName?: string;
     lastName?: string;
     phone?: string;
-    dateOfBirth?: Date;
-    location?: string;
     bio?: string;
-    interests?: string[];
+    location?: string;
     skillLevel?: 'beginner' | 'intermediate' | 'advanced';
   };
-  preferences?: {
-    emailNotifications: boolean;
-    marketingEmails: boolean;
-    newsletter: boolean;
-  };
-  stats?: {
-    totalEnrollments?: number;
-    completedWorkshops?: number;
-    certificatesEarned?: number;
-    lastActive?: Timestamp;
-  };
-  // Geolocation data for analytics
+  
+  // Geolocation data for currency detection
   geolocation?: {
     countryCode: string;
     countryName?: string;
     region?: string;
     city?: string;
     timezone?: string;
-    detectedAt: Timestamp;
     ipAddress?: string;
+    detectedAt: Timestamp;
+  };
+  
+  // User preferences
+  preferences?: {
+    emailNotifications: boolean;
+    marketingEmails: boolean;
+    newsletter: boolean;
+    currency: 'INR' | 'USD' | 'EUR' | 'GBP'; // User's preferred currency
+  };
+  
+  // User statistics
+  stats?: {
+    totalEnrollments: number;
+    completedWorkshops: number;
+    certificatesEarned: number;
+    totalSpent: number;
+    preferredCurrency: string;
   };
 }
 
@@ -115,15 +122,31 @@ export interface Enrollment {
   enrolledAt: Timestamp;
   completedAt?: Timestamp;
   expiresAt?: Timestamp;
+  
+  // Payment information with currency details
   payment: {
     amount: number;
     currency: string;
+    originalAmount?: number; // Original amount in base currency
+    originalCurrency?: string; // Original currency
+    exchangeRate?: number; // Exchange rate used
     paymentId?: string;
     orderId?: string;
     status: 'pending' | 'completed' | 'failed' | 'refunded';
     paymentMethod: 'razorpay' | 'free';
     paidAt?: Timestamp;
+    
+    // User location at enrollment
+    userLocation?: {
+      countryCode: string;
+      countryName?: string;
+      region?: string;
+      city?: string;
+      timezone?: string;
+      ipAddress?: string;
+    };
   };
+  
   progress: {
     currentModule: number;
     completedModules: number[];
@@ -131,6 +154,7 @@ export interface Enrollment {
     percentageComplete: number;
     lastAccessed: Timestamp;
   };
+  
   certificate?: {
     issued: boolean;
     certificateId?: string;
@@ -144,10 +168,27 @@ export interface Payment {
   userId: string;
   workshopId: string;
   enrollmentId: string;
+  
+  // Payment details with currency information
   amount: number;
   currency: string;
+  originalAmount?: number; // Original amount in base currency (INR)
+  originalCurrency?: string; // Original currency (INR)
+  exchangeRate?: number; // Exchange rate used for conversion
   status: 'pending' | 'completed' | 'failed' | 'refunded';
   paymentMethod: 'razorpay' | 'free';
+  
+  // User location at time of payment
+  userLocation?: {
+    countryCode: string;
+    countryName?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+    ipAddress?: string;
+  };
+  
+  // Razorpay specific details
   razorpay?: {
     paymentId: string;
     orderId: string;
@@ -157,6 +198,8 @@ export interface Payment {
     cardId?: string;
     method?: string;
   };
+  
+  // Timestamps
   createdAt: Timestamp;
   paidAt?: Timestamp;
   refundedAt?: Timestamp;
@@ -422,6 +465,19 @@ class DatabaseService {
     );
     const querySnapshot = await getDocs(q);
     
+    return querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Payment))
+      .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+  }
+
+  async getAllPayments(): Promise<Payment[]> {
+    const paymentsRef = collection(firestore, 'payments');
+    const q = query(paymentsRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+
     return querySnapshot.docs
       .map(doc => ({
         id: doc.id,

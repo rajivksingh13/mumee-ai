@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { databaseService } from './databaseService';
-import { Timestamp } from 'firebase/firestore';
+
 
 export interface AuthError {
   code: string;
@@ -60,7 +60,8 @@ export const register = async (email: string, password: string, displayName: str
         totalEnrollments: 0,
         completedWorkshops: 0,
         certificatesEarned: 0,
-        lastActive: Timestamp.now(),
+        totalSpent: 0,
+        preferredCurrency: 'INR'
       }
     };
 
@@ -111,7 +112,8 @@ export const login = async (email: string, password: string): Promise<FirebaseUs
           totalEnrollments: 0,
           completedWorkshops: 0,
           certificatesEarned: 0,
-          lastActive: Timestamp.now(),
+          totalSpent: 0,
+          preferredCurrency: 'INR'
         }
       };
 
@@ -125,13 +127,14 @@ export const login = async (email: string, password: string): Promise<FirebaseUs
 
       await databaseService.createUser(cleanedUserData);
     } else {
-      // Update last active
+      // Update user stats
       await databaseService.updateUser(user.uid, {
         stats: {
           totalEnrollments: existingUser.stats?.totalEnrollments || 0,
           completedWorkshops: existingUser.stats?.completedWorkshops || 0,
           certificatesEarned: existingUser.stats?.certificatesEarned || 0,
-          lastActive: Timestamp.now(),
+          totalSpent: existingUser.stats?.totalSpent || 0,
+          preferredCurrency: existingUser.stats?.preferredCurrency || 'INR'
         }
       });
     }
@@ -173,7 +176,8 @@ export const signInWithGoogle = async (): Promise<FirebaseUser> => {
           totalEnrollments: 0,
           completedWorkshops: 0,
           certificatesEarned: 0,
-          lastActive: Timestamp.now(),
+          totalSpent: 0,
+          preferredCurrency: 'INR'
         }
       };
 
@@ -187,13 +191,14 @@ export const signInWithGoogle = async (): Promise<FirebaseUser> => {
 
       await databaseService.createUser(cleanedUserData);
     } else {
-      // Update last active
+      // Update user stats
       await databaseService.updateUser(user.uid, {
         stats: {
           totalEnrollments: existingUser.stats?.totalEnrollments || 0,
           completedWorkshops: existingUser.stats?.completedWorkshops || 0,
           certificatesEarned: existingUser.stats?.certificatesEarned || 0,
-          lastActive: Timestamp.now(),
+          totalSpent: existingUser.stats?.totalSpent || 0,
+          preferredCurrency: existingUser.stats?.preferredCurrency || 'INR'
         }
       });
     }

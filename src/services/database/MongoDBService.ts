@@ -363,7 +363,8 @@ export class MongoDBService implements IDatabaseService {
             totalEnrollments: 1,
             completedWorkshops: 0,
             certificatesEarned: 0,
-            lastActive: new Date()
+            totalSpent: paymentData?.amount || 0,
+            preferredCurrency: paymentData?.currency || 'INR'
           }
         });
 

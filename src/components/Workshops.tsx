@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { enrollmentService } from '../services/enrollmentService';
+import { useGeolocation } from '../hooks/useGeolocation';
+import { getWorkshopPricing } from '../utils/currencyUtils';
 
 
 // Workshop configuration with Firestore IDs
@@ -29,7 +31,7 @@ const workshopConfigs = [
     description:
       'Take your AI skills to the next level! Dive deep into advanced machine learning, neural networks, GenAI, and real-world AI projects. Ideal for those with prior experience or who have completed the foundation workshop.',
     cta: 'Explore Advance Workshop',
-    level: 'advance',
+    level: 'advanced',
     link: '/workshops/advance',
     workshopId: 'advanced-workshop', // Firestore workshop ID
   },
@@ -39,6 +41,9 @@ const Workshops: React.FC = () => {
   const { user } = useAuth();
   const [enrolledWorkshops, setEnrolledWorkshops] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  
+  // Get user location for pricing (works for both logged-in and non-logged-in users)
+  const { countryCode, loading: locationLoading } = useGeolocation();
 
   // Check which workshops the user is enrolled in from Firestore
   useEffect(() => {
@@ -90,9 +95,17 @@ const Workshops: React.FC = () => {
       <p className="text-gray-700 text-center mb-12 text-lg max-w-2xl mx-auto">
         Join our hands-on Gen-AI workshops designed for all levels. Whether you're just starting or looking to master advanced AI concepts, we have the right workshop for you.
       </p>
+      
+
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
          {workshopConfigs.map((ws) => {
            const isEnrolled = enrolledWorkshops.has(ws.level);
+           
+           // Show loading state for pricing if location is still being detected
+           const pricing = locationLoading || !countryCode 
+             ? { formattedPrice: 'Detecting...', currency: 'LOADING' }
+             : getWorkshopPricing(ws.level as 'beginner' | 'foundation' | 'advanced', countryCode);
+           
            return (
              <div
                key={ws.level}
@@ -111,15 +124,25 @@ const Workshops: React.FC = () => {
                
                <h2 className="text-2xl font-bold text-blue-600 mb-4 z-10 relative">{ws.title}</h2>
                <p className="text-gray-700 mb-6 z-10 relative">{ws.description}</p>
+               
+               {/* Pricing */}
+               <div className="mb-6 z-10 relative">
+                 <div className={`text-2xl font-bold ${locationLoading || !countryCode ? 'text-gray-500' : 'text-green-600'}`}>
+                   {pricing.formattedPrice}
+                 </div>
+                 <div className="text-sm text-gray-500">
+                   {ws.level === 'beginner' ? 'Free Workshop' : 'One-time payment'}
+                 </div>
+               </div>
                <Link
                  to={ws.link}
                  className={`mt-auto font-semibold px-6 py-3 rounded-lg shadow transition z-10 relative ${
                    isEnrolled 
                      ? 'bg-green-500 hover:bg-green-600 text-white' 
-                     : 'bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white'
+                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                  }`}
                >
-                 {isEnrolled ? 'View Workshop' : ws.cta}
+                 {isEnrolled ? 'View Workshop' : 'Learn More'}
                </Link>
              </div>
            );

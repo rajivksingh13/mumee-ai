@@ -7,7 +7,7 @@ export interface AccountStats {
   certificatesEarned: number;
   totalSpent: number;
   aiTokens: number;
-  lastActive: Date;
+  preferredCurrency: string;
 }
 
 export interface AccountData {
@@ -135,7 +135,7 @@ class AccountService {
     // Calculate AI tokens based on activity (mock calculation for now)
     const aiTokens = this.calculateAITokens(enrollments);
     
-    const lastActive = user?.stats?.lastActive?.toDate() || new Date();
+    const preferredCurrency = user?.stats?.preferredCurrency || 'INR';
 
     const stats = {
       totalEnrollments,
@@ -143,7 +143,7 @@ class AccountService {
       certificatesEarned,
       totalSpent,
       aiTokens,
-      lastActive
+      preferredCurrency
     };
     
     return stats;
@@ -171,7 +171,7 @@ class AccountService {
       certificatesEarned: 0,
       totalSpent: 0,
       aiTokens: 0,
-      lastActive: new Date()
+      preferredCurrency: 'INR'
     };
   }
 

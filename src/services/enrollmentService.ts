@@ -28,10 +28,21 @@ class EnrollmentService {
     paymentData?: {
       amount: number;
       currency: string;
+      originalAmount?: number;
+      originalCurrency?: string;
+      exchangeRate?: number;
       status: 'pending' | 'completed' | 'failed';
       paymentMethod: 'razorpay' | 'free';
       paymentId?: string;
       orderId?: string;
+      userLocation?: {
+        countryCode: string;
+        countryName?: string;
+        region?: string;
+        city?: string;
+        timezone?: string;
+        ipAddress?: string;
+      };
     }
   ): Promise<{ enrollmentId: string; paymentId?: string }> {
     try {
@@ -63,8 +74,12 @@ class EnrollmentService {
         paymentData ? {
           amount: paymentData.amount,
           currency: paymentData.currency,
+          originalAmount: paymentData.originalAmount,
+          originalCurrency: paymentData.originalCurrency,
+          exchangeRate: paymentData.exchangeRate,
           status: paymentData.status,
           paymentMethod: paymentData.paymentMethod,
+          userLocation: paymentData.userLocation,
           razorpay: {
             paymentId: paymentData.paymentId || '',
             orderId: paymentData.orderId || ''
@@ -272,7 +287,8 @@ class EnrollmentService {
           totalEnrollments,
           completedWorkshops,
           certificatesEarned,
-          lastActive: Timestamp.now()
+          totalSpent: 0, // Will be calculated from payments
+          preferredCurrency: 'INR' // Default currency
         }
       });
     } catch (error) {

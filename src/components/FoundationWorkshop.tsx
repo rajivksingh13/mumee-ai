@@ -5,6 +5,8 @@ import { buildApiUrl, API_CONFIG } from '../config/api';
 import { databaseService, Workshop } from '../services/databaseService';
 import { enrollmentService, EnrollmentStatus } from '../services/enrollmentService';
 import { paymentService } from '../services/paymentService';
+import { useGeolocation } from '../hooks/useGeolocation';
+import { getWorkshopPricing } from '../utils/currencyUtils';
 
 const FoundationWorkshop: React.FC = () => {
   const { user } = useAuth();
@@ -23,10 +25,18 @@ const FoundationWorkshop: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasAutoEnrolled, setHasAutoEnrolled] = useState(false);
-
+  
+  // Get user location for pricing
+  const { countryCode, isIndianUser, loading: locationLoading } = useGeolocation();
+  
   // Get workshop ID from the workshop data
   const workshopId = workshop?.id || 'foundation-workshop';
   const WORKSHOP_SLUG = 'foundation';
+
+  // Get pricing based on user location
+  const pricing = locationLoading || !countryCode 
+    ? { amount: 2999, currency: 'INR', symbol: '₹', formattedPrice: '₹2,999' } // Default to INR while loading
+    : getWorkshopPricing('foundation', countryCode);
 
   // Load workshop data and enrollment status from Firestore
   useEffect(() => {
@@ -102,15 +112,26 @@ const FoundationWorkshop: React.FC = () => {
     try {
       console.log('💳 Processing payment through Razorpay...');
       
+      // Get pricing based on user location
+      const pricing = getWorkshopPricing('foundation', countryCode || 'US');
+      
+      // Get user location data
+      const userLocation = await databaseService.getUserGeolocation(user.uid);
+      
       // Process payment through Razorpay
       const paymentResult = await paymentService.processPayment({
-        amount: workshop.price,
-        currency: workshop.currency,
+        amount: pricing.amount,
+        currency: pricing.currency,
         courseId: workshopId,
         courseTitle: workshop.title,
         userName: user.displayName || 'User',
         userEmail: user.email || '',
         userId: user.uid,
+        userCountryCode: countryCode || 'IN',
+        userLocation: userLocation || {
+          countryCode: countryCode || 'IN',
+          countryName: isIndianUser ? 'India' : 'International'
+        }
       });
 
       console.log('📊 Payment result:', paymentResult);
@@ -124,12 +145,19 @@ const FoundationWorkshop: React.FC = () => {
 
       // Enroll user using enrollment service with actual payment data
       await enrollmentService.enrollUser(user.uid, workshopId, workshop, {
-        amount: workshop.price,
-        currency: workshop.currency,
+        amount: pricing.amount,
+        currency: pricing.currency,
+        originalAmount: 2999, // Original INR amount
+        originalCurrency: 'INR',
+        exchangeRate: isIndianUser ? 1 : 83.5, // Exchange rate used
         status: 'completed',
         paymentMethod: 'razorpay',
         paymentId: paymentResult.paymentId,
         orderId: paymentResult.orderId,
+        userLocation: userLocation || {
+          countryCode: countryCode || 'IN',
+          countryName: isIndianUser ? 'India' : 'International'
+        }
       });
       
       console.log('✅ User enrolled successfully');
@@ -361,7 +389,9 @@ const FoundationWorkshop: React.FC = () => {
                 <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-6 backdrop-blur-2xl mb-6">
                   <h3 className="text-xl font-bold text-blue-600 mb-4">Enroll Now</h3>
                   <div className="mb-4">
-                    <div className="text-3xl font-bold text-green-600 mb-2">₹{workshop?.price || 999}</div>
+                    <div className="text-3xl font-bold text-green-600 mb-2">
+                      {pricing.formattedPrice}
+                    </div>
                     <div className="text-gray-600">One-time payment</div>
                   </div>
                   <button

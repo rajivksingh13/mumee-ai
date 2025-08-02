@@ -17,7 +17,7 @@ const AccountPage: React.FC = () => {
       certificatesEarned: 0,
       totalSpent: 0,
       aiTokens: 0,
-      lastActive: new Date()
+      preferredCurrency: 'INR'
     },
     isLoading: true,
     error: null

@@ -269,33 +269,38 @@ export class FirestoreService implements IDatabaseService {
   }
 
   async getUserPayments(userId: string): Promise<Payment[]> {
-    const paymentsRef = collection(firestore, 'payments');
-    const q = query(
-      paymentsRef,
-      where('userId', '==', userId)
-    );
-    
     try {
+      const paymentsRef = collection(firestore, 'payments');
+      const q = query(
+        paymentsRef,
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      
       const querySnapshot = await getDocs(q);
-      
-      // Sort in memory instead of using orderBy to avoid composite index requirement
-      const payments = querySnapshot.docs
-        .map(doc => {
-          return DataConverter.normalizePayment({
-            id: doc.id,
-            ...doc.data()
-          } as Payment);
-        })
-        .sort((a, b) => {
-          const aTime = (a.createdAt as any)?.toMillis?.() || (a.createdAt as any)?.getTime?.() || 0;
-          const bTime = (b.createdAt as any)?.toMillis?.() || (b.createdAt as any)?.getTime?.() || 0;
-          return bTime - aTime; // Sort by newest first
-        });
-      
-      return payments;
+      return querySnapshot.docs.map(doc => DataConverter.normalizePayment({
+        id: doc.id,
+        ...doc.data()
+      } as Payment));
     } catch (error) {
-      console.error('❌ FirestoreService: Error getting payments:', error);
-      throw error;
+      console.error('Error getting user payments:', error);
+      return [];
+    }
+  }
+
+  async getAllPayments(): Promise<Payment[]> {
+    try {
+      const paymentsRef = collection(firestore, 'payments');
+      const q = query(paymentsRef, orderBy('createdAt', 'desc'));
+      
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => DataConverter.normalizePayment({
+        id: doc.id,
+        ...doc.data()
+      } as Payment));
+    } catch (error) {
+      console.error('Error getting all payments:', error);
+      return [];
     }
   }
 
@@ -403,8 +408,12 @@ export class FirestoreService implements IDatabaseService {
         enrollmentId: enrollmentRef.id,
         amount: paymentData.amount || 0,
         currency: paymentData.currency || 'INR',
+        originalAmount: paymentData.originalAmount || paymentData.amount || 0,
+        originalCurrency: paymentData.originalCurrency || 'INR',
+        exchangeRate: paymentData.exchangeRate || 1,
         status: paymentData.status || 'completed',
         paymentMethod: paymentData.paymentMethod || 'razorpay',
+        userLocation: paymentData.userLocation,
         razorpay: paymentData.razorpay
       };
       
@@ -418,9 +427,14 @@ export class FirestoreService implements IDatabaseService {
       // Update enrollment with payment details
       batch.update(enrollmentRef, {
         'payment.amount': payment.amount,
+        'payment.currency': payment.currency,
+        'payment.originalAmount': payment.originalAmount,
+        'payment.originalCurrency': payment.originalCurrency,
+        'payment.exchangeRate': payment.exchangeRate,
         'payment.paymentId': payment.razorpay?.paymentId,
         'payment.orderId': payment.razorpay?.orderId,
-        'payment.paidAt': now
+        'payment.paidAt': now,
+        'payment.userLocation': payment.userLocation
       });
     }
     

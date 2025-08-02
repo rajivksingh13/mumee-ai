@@ -1,5 +1,6 @@
 import { buildApiUrl, API_CONFIG } from '../config/api';
 
+
 declare global {
   interface Window {
     Razorpay: any;
@@ -14,6 +15,15 @@ export interface PaymentOptions {
   userName: string;
   userEmail: string;
   userId: string;
+  userCountryCode?: string; // Add country code for currency conversion
+  userLocation?: {
+    countryCode: string;
+    countryName?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+    ipAddress?: string;
+  };
 }
 
 export interface PaymentResult {
