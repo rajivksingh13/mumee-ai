@@ -83,6 +83,39 @@ const Workshops: React.FC = () => {
     checkEnrollments();
   }, [user]);
 
+  // Helper function to get pricing with better loading state
+  const getPricingDisplay = (level: 'beginner' | 'foundation' | 'advanced') => {
+    // For beginner workshop, always show Free regardless of location
+    if (level === 'beginner') {
+      return {
+        formattedPrice: 'Free',
+        currency: 'FREE',
+        paymentType: 'Free Workshop'
+      };
+    }
+
+    // If location is still loading, show a better loading state
+    if (locationLoading || !countryCode) {
+      return {
+        formattedPrice: 'Loading...',
+        currency: 'LOADING',
+        paymentType: 'One-time payment'
+      };
+    }
+
+    // Get actual pricing based on detected location
+    const pricing = getWorkshopPricing(level as 'beginner' | 'foundation' | 'advanced', countryCode);
+    
+    return {
+      formattedPrice: pricing.formattedPrice,
+      currency: pricing.currency,
+      paymentType: 'One-time payment'
+    };
+  };
+
+  // Show a better loading state for the entire page if location is still loading
+  const showLocationLoading = locationLoading && !countryCode;
+
   if (loading) {
     return (
       <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
@@ -104,15 +137,20 @@ const Workshops: React.FC = () => {
         Join our hands-on Gen-AI workshops designed for all levels. Whether you're just starting or looking to master advanced AI concepts, we have the right workshop for you.
       </p>
       
+      {/* Show location loading indicator */}
+      {showLocationLoading && (
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+            <span className="text-sm">Detecting your location for accurate pricing...</span>
+          </div>
+        </div>
+      )}
 
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
          {workshopConfigs.map((ws) => {
            const isEnrolled = enrolledWorkshops.has(ws.level);
-           
-           // Show loading state for pricing if location is still being detected
-           const pricing = locationLoading || !countryCode 
-             ? { formattedPrice: 'Detecting...', currency: 'LOADING' }
-             : getWorkshopPricing(ws.level as 'beginner' | 'foundation' | 'advanced', countryCode);
+           const pricing = getPricingDisplay(ws.level as 'beginner' | 'foundation' | 'advanced');
            
            // Debug pricing calculation
            if (!locationLoading && countryCode) {
@@ -145,11 +183,17 @@ const Workshops: React.FC = () => {
                
                {/* Pricing */}
                <div className="mb-6 z-10 relative">
-                 <div className={`text-2xl font-bold ${locationLoading || !countryCode ? 'text-gray-500' : 'text-green-600'}`}>
+                 <div className={`text-2xl font-bold ${
+                   pricing.currency === 'LOADING' 
+                     ? 'text-gray-500 animate-pulse' 
+                     : pricing.currency === 'FREE' 
+                       ? 'text-green-600' 
+                       : 'text-green-600'
+                 }`}>
                    {pricing.formattedPrice}
                  </div>
                  <div className="text-sm text-gray-500">
-                   {ws.level === 'beginner' ? 'Free Workshop' : 'One-time payment'}
+                   {pricing.paymentType}
                  </div>
                </div>
                <Link

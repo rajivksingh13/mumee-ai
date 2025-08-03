@@ -49,11 +49,12 @@ router.get('/detect', async (req, res) => {
     let countryCode = null;
     let geolocationData = null;
 
+    // Try APIs with reduced timeout for faster response
     for (const api of apis) {
       try {
         console.log(`Trying geolocation API: ${api}`);
         const response = await axios.get(api, {
-          timeout: 5000,
+          timeout: 3000, // Reduced from 5000ms to 3000ms for faster response
           headers: {
             'Accept': 'application/json',
             'User-Agent': 'MumeeAI/1.0'

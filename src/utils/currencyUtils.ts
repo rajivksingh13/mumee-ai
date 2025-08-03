@@ -62,12 +62,23 @@ export const getWorkshopPricing = (level: 'beginner' | 'foundation' | 'advanced'
   
   const inrPrice = pricing[level];
   
+  // Always return Free for beginner workshop
   if (level === 'beginner') {
     return {
       amount: 0,
       currency: 'FREE',
       symbol: '',
       formattedPrice: 'Free'
+    };
+  }
+  
+  // If no country code provided, default to INR
+  if (!userCountryCode) {
+    return {
+      amount: inrPrice,
+      currency: 'INR',
+      symbol: '₹',
+      formattedPrice: `₹${inrPrice.toLocaleString('en-IN')}`
     };
   }
   
