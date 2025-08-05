@@ -80,6 +80,18 @@ export interface Workshop {
   featured: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  
+  // Live session properties
+  isLiveSession?: boolean;
+  scheduledDate?: string; // ISO date string
+  scheduledTime?: string; // HH:MM format
+  timezone?: string;
+  meetingLink?: string;
+  meetingId?: string;
+  meetingPassword?: string;
+  sessionDuration?: number; // in minutes
+  maxParticipants?: number;
+  
   overview: {
     duration: number;
     level: string;
@@ -513,27 +525,41 @@ class DatabaseService {
       where('userId', '==', userId)
     );
     
-    return onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
-      const enrollments = querySnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Enrollment))
-        .sort((a, b) => b.enrolledAt.toMillis() - a.enrolledAt.toMillis());
-      callback(enrollments);
-    });
+    return onSnapshot(q, 
+      (querySnapshot: QuerySnapshot<DocumentData>) => {
+        const enrollments = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as Enrollment))
+          .sort((a, b) => b.enrolledAt.toMillis() - a.enrolledAt.toMillis());
+        callback(enrollments);
+      },
+      (error) => {
+        console.error('❌ Error in onUserEnrollments listener:', error);
+        // Return empty array on error to prevent UI issues
+        callback([]);
+      }
+    );
   }
 
   onWorkshopUpdates(workshopId: string, callback: (workshop: Workshop | null) => void) {
     const workshopRef = doc(firestore, 'workshops', workshopId);
     
-    return onSnapshot(workshopRef, (doc) => {
-      if (doc.exists()) {
-        callback(doc.data() as Workshop);
-      } else {
+    return onSnapshot(workshopRef, 
+      (doc) => {
+        if (doc.exists()) {
+          callback(doc.data() as Workshop);
+        } else {
+          callback(null);
+        }
+      },
+      (error) => {
+        console.error('❌ Error in onWorkshopUpdates listener:', error);
+        // Return null on error to prevent UI issues
         callback(null);
       }
-    });
+    );
   }
 
   // Batch operations
@@ -565,10 +591,6 @@ class DatabaseService {
     });
 
     const batch = writeBatch(firestore);
-    
-    // Create enrollment
-    const enrollmentsRef = collection(firestore, 'enrollments');
-    const enrollmentRef = doc(enrollmentsRef);
     const now = Timestamp.now();
     
     // For paid workshops, require payment data
@@ -577,20 +599,83 @@ class DatabaseService {
       throw new Error('Payment data is required for paid workshop enrollment');
     }
     
+    let paymentId: string | undefined;
+    
+    // ALWAYS create payment record for paid workshops to maintain relationship chain
+    if (isPaidWorkshop) {
+      const paymentsRef = collection(firestore, 'payments');
+      const paymentRef = doc(paymentsRef);
+      
+      const payment: Omit<Payment, 'id' | 'createdAt'> = {
+        userId,
+        workshopId,
+        enrollmentId: '', // Will be updated after enrollment creation
+        amount: paymentData?.amount || workshop.price,
+        currency: paymentData?.currency || 'INR',
+        status: paymentData?.status || 'completed',
+        paymentMethod: paymentData?.paymentMethod || 'razorpay',
+        razorpay: paymentData?.razorpay,
+        paidAt: paymentData?.status === 'completed' ? now : undefined,
+        userLocation: paymentData?.userLocation
+      };
+      
+      batch.set(paymentRef, {
+        ...payment,
+        createdAt: now
+      });
+      
+      paymentId = paymentRef.id;
+      console.log('💳 Created payment record:', paymentId);
+    }
+    
+    // Create enrollment with proper payment reference
+    const enrollmentsRef = collection(firestore, 'enrollments');
+    const enrollmentRef = doc(enrollmentsRef);
+    
+    // Create payment object conditionally to avoid undefined values
+    const paymentObject: Enrollment['payment'] = {
+      amount: paymentData?.amount || (isPaidWorkshop ? workshop.price : 0),
+      currency: paymentData?.currency || 'INR',
+      status: paymentData?.status || (isPaidWorkshop ? 'completed' : 'completed'),
+      paymentMethod: paymentData?.paymentMethod || (isPaidWorkshop ? 'razorpay' : 'free')
+    };
+
+    // Only add optional fields if they exist
+    if (paymentData?.originalAmount !== undefined) {
+      paymentObject.originalAmount = paymentData.originalAmount;
+    }
+    if (paymentData?.originalCurrency) {
+      paymentObject.originalCurrency = paymentData.originalCurrency;
+    }
+    if (paymentData?.exchangeRate !== undefined) {
+      paymentObject.exchangeRate = paymentData.exchangeRate;
+    }
+
+    // Only add paymentId and orderId if they exist
+    if (paymentId) {
+      paymentObject.paymentId = paymentId;
+    }
+    if (paymentData?.razorpay?.orderId) {
+      paymentObject.orderId = paymentData.razorpay.orderId;
+    }
+    
+    // Only add userLocation if it exists
+    if (paymentData?.userLocation) {
+      paymentObject.userLocation = paymentData.userLocation;
+    }
+    
+    // Only add paidAt if it has a value
+    const paidAtValue = isPaidWorkshop ? (paymentData?.status === 'completed' ? now : undefined) : now;
+    if (paidAtValue) {
+      paymentObject.paidAt = paidAtValue;
+    }
+
     const enrollment: Omit<Enrollment, 'id'> = {
       userId,
       workshopId,
       status: 'active',
       enrolledAt: now,
-      payment: {
-        amount: paymentData?.amount || 0,
-        currency: paymentData?.currency || 'INR',
-        status: paymentData?.status || (isPaidWorkshop ? 'pending' : 'completed'),
-        paymentMethod: paymentData?.paymentMethod || (isPaidWorkshop ? 'razorpay' : 'free'),
-        paymentId: paymentData?.razorpay?.paymentId,
-        orderId: paymentData?.razorpay?.orderId,
-        paidAt: isPaidWorkshop ? (paymentData?.status === 'completed' ? now : undefined) : now
-      },
+      payment: paymentObject,
       progress: {
         currentModule: 0,
         completedModules: [],
@@ -600,52 +685,26 @@ class DatabaseService {
       }
     };
     
-    console.log('📝 Creating enrollment with data:', {
+    console.log('📝 Creating enrollment with payment reference:', {
       enrollmentId: enrollmentRef.id,
+      paymentId: paymentId,
       payment: enrollment.payment,
-      paidAt: enrollment.payment.paidAt,
-      paymentStatus: paymentData?.status,
-      isPaidWorkshop,
-      shouldSetPaidAt: isPaidWorkshop && paymentData?.status === 'completed'
+      isPaidWorkshop
     });
     
     batch.set(enrollmentRef, enrollment);
     
-    let paymentId: string | undefined;
-    
-    // Create payment record for paid workshops
-    if (isPaidWorkshop && paymentData) {
-      const paymentsRef = collection(firestore, 'payments');
-      const paymentRef = doc(paymentsRef);
-      
-      const payment: Omit<Payment, 'id' | 'createdAt'> = {
-        userId,
-        workshopId,
-        enrollmentId: enrollmentRef.id,
-        amount: paymentData.amount || 0,
-        currency: paymentData.currency || 'INR',
-        status: paymentData.status || 'completed',
-        paymentMethod: paymentData.paymentMethod || 'razorpay',
-        razorpay: paymentData.razorpay,
-        paidAt: paymentData.status === 'completed' ? now : undefined
-      };
-      
-      batch.set(paymentRef, {
-        ...payment,
-        createdAt: now
+    // Update payment record with enrollment ID to complete the relationship chain
+    if (paymentId) {
+      batch.update(doc(firestore, 'payments', paymentId), {
+        enrollmentId: enrollmentRef.id
       });
-      
-      paymentId = paymentRef.id;
+      console.log('🔗 Updated payment with enrollment ID:', enrollmentRef.id);
     }
     
     await batch.commit();
     
-    console.log('✅ Enrollment created successfully:', {
-      enrollmentId: enrollmentRef.id,
-      paymentId,
-      isPaidWorkshop
-    });
-    
+    console.log('✅ Enrollment and payment relationship created successfully');
     return {
       enrollmentId: enrollmentRef.id,
       paymentId

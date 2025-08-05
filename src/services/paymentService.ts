@@ -184,7 +184,7 @@ class PaymentService {
         key: razorpayKey,
         amount: order.amount,
         currency: order.currency,
-        name: 'Mumee AI',
+        name: 'titliAI',
         description: options.courseTitle,
         order_id: order.id,
         prefill: {

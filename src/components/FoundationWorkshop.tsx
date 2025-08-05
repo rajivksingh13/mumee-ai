@@ -25,6 +25,13 @@ const FoundationWorkshop: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasAutoEnrolled, setHasAutoEnrolled] = useState(false);
+  const [showLiveSessionModal, setShowLiveSessionModal] = useState(false);
+  const [liveSessionDetails, setLiveSessionDetails] = useState<{
+    hasScheduledSession: boolean;
+    date?: string;
+    time?: string;
+    timezone?: string;
+  } | null>(null);
   
   // Get user location for pricing
   const { countryCode, isIndianUser, loading: locationLoading } = useGeolocation();
@@ -201,6 +208,29 @@ const FoundationWorkshop: React.FC = () => {
     } finally {
       setIsEnrolling(false);
     }
+  };
+
+  const handleJoinLiveSession = () => {
+    const hasScheduledSession = workshop?.isLiveSession && workshop?.scheduledDate;
+    
+    if (hasScheduledSession && workshop?.meetingLink) {
+      // Open live session link
+      window.open(workshop.meetingLink, '_blank');
+    } else {
+      // Show professional modal
+      setLiveSessionDetails({
+        hasScheduledSession: !!hasScheduledSession,
+        date: workshop?.scheduledDate,
+        time: workshop?.scheduledTime,
+        timezone: workshop?.timezone
+      });
+      setShowLiveSessionModal(true);
+    }
+  };
+
+  const closeLiveSessionModal = () => {
+    setShowLiveSessionModal(false);
+    setLiveSessionDetails(null);
   };
 
   // Loading state
@@ -428,8 +458,14 @@ const FoundationWorkshop: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition">
-                      Continue Learning
+                                                                                   <button 
+                        onClick={handleJoinLiveSession}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition flex items-center justify-center mx-auto"
+                      >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Join Live Session
                     </button>
                   </div>
                 </div>
@@ -465,6 +501,148 @@ const FoundationWorkshop: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Live Session Modal */}
+      {showLiveSessionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <h2 className="text-xl font-bold text-white">Live Session Details</h2>
+                </div>
+                <button
+                  onClick={closeLiveSessionModal}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {liveSessionDetails?.hasScheduledSession ? (
+                <div className="space-y-4">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Session Scheduled</h3>
+                    <p className="text-gray-600">Your live session is confirmed</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+                      <svg className="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Date</p>
+                        <p className="text-sm text-gray-600">{liveSessionDetails.date}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center p-3 bg-purple-50 rounded-lg">
+                      <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Time</p>
+                        <p className="text-sm text-gray-600">{liveSessionDetails.time || 'TBD'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center p-3 bg-green-50 rounded-lg">
+                      <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Timezone</p>
+                        <p className="text-sm text-gray-600">{liveSessionDetails.timezone || 'IST'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> You'll receive meeting details and access link via email before the session.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Coming Soon</h3>
+                    <p className="text-gray-600">Live session details will be announced</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                      <svg className="w-5 h-5 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Date</p>
+                        <p className="text-sm text-gray-600">Coming Soon</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                      <svg className="w-5 h-5 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Time</p>
+                        <p className="text-sm text-gray-600">TBD</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                      <svg className="w-5 h-5 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Timezone</p>
+                        <p className="text-sm text-gray-600">IST</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Note:</strong> You'll receive detailed schedule and meeting information via email once the session is confirmed.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={closeLiveSessionModal}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

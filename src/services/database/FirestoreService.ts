@@ -273,15 +273,24 @@ export class FirestoreService implements IDatabaseService {
       const paymentsRef = collection(firestore, 'payments');
       const q = query(
         paymentsRef,
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', userId)
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => DataConverter.normalizePayment({
-        id: doc.id,
-        ...doc.data()
-      } as Payment));
+      
+      // Sort in memory instead of using orderBy to avoid composite index requirement
+      const payments = querySnapshot.docs
+        .map(doc => DataConverter.normalizePayment({
+          id: doc.id,
+          ...doc.data()
+        } as Payment))
+        .sort((a, b) => {
+          const aTime = (a.createdAt as any)?.toMillis?.() || (a.createdAt as any)?.getTime?.() || 0;
+          const bTime = (b.createdAt as any)?.toMillis?.() || (b.createdAt as any)?.getTime?.() || 0;
+          return bTime - aTime; // Sort by newest first
+        });
+      
+      return payments;
     } catch (error) {
       console.error('Error getting user payments:', error);
       return [];
@@ -322,16 +331,18 @@ export class FirestoreService implements IDatabaseService {
     const modulesRef = collection(firestore, 'modules');
     const q = query(
       modulesRef,
-      where('workshopId', '==', workshopId),
-      where('status', '==', 'active'),
-      orderBy('order', 'asc')
+      where('workshopId', '==', workshopId)
     );
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => DataConverter.normalizeModule({
-      id: doc.id,
-      ...doc.data()
-    } as Module));
+    // Filter and sort in memory instead of using composite queries
+    return querySnapshot.docs
+      .map(doc => DataConverter.normalizeModule({
+        id: doc.id,
+        ...doc.data()
+      } as Module))
+      .filter(module => module.status === 'active')
+      .sort((a, b) => a.order - b.order);
   }
 
   async getModule(moduleId: string): Promise<Module | null> {
@@ -366,24 +377,117 @@ export class FirestoreService implements IDatabaseService {
     workshopId: string, 
     paymentData?: Partial<Payment>
   ): Promise<{ enrollmentId: string; paymentId?: string }> {
+    console.log('🎯 FirestoreService.enrollUserInWorkshop called with:', {
+      userId,
+      workshopId,
+      paymentData
+    });
+
+    // Get workshop details to check if it's a paid workshop
+    const workshop = await this.getWorkshop(workshopId);
+    if (!workshop) {
+      throw new Error('Workshop not found');
+    }
+
+    const isPaidWorkshop = workshop.price > 0;
+    console.log('💰 Workshop payment check:', {
+      workshopId,
+      workshopTitle: workshop.title,
+      price: workshop.price,
+      isPaidWorkshop
+    });
+
     const batch = writeBatch(firestore);
+    const now = Timestamp.now();
     
-    // Create enrollment
+    // For paid workshops, require payment data
+    if (isPaidWorkshop && !paymentData) {
+      console.error('❌ No payment data provided for paid workshop enrollment');
+      throw new Error('Payment data is required for paid workshop enrollment');
+    }
+    
+    let paymentId: string | undefined;
+    
+    // ALWAYS create payment record for paid workshops to maintain relationship chain
+    if (isPaidWorkshop) {
+      const paymentsRef = collection(firestore, 'payments');
+      const paymentRef = doc(paymentsRef);
+      
+      const payment: Omit<Payment, 'id' | 'createdAt'> = {
+        userId,
+        workshopId,
+        enrollmentId: '', // Will be updated after enrollment creation
+        amount: paymentData?.amount || workshop.price,
+        currency: paymentData?.currency || 'INR',
+        originalAmount: paymentData?.originalAmount || paymentData?.amount || workshop.price,
+        originalCurrency: paymentData?.originalCurrency || 'INR',
+        exchangeRate: paymentData?.exchangeRate || 1,
+        status: paymentData?.status || 'completed',
+        paymentMethod: paymentData?.paymentMethod || 'razorpay',
+        userLocation: paymentData?.userLocation,
+        razorpay: paymentData?.razorpay,
+        paidAt: paymentData?.status === 'completed' ? now : undefined
+      };
+      
+      batch.set(paymentRef, {
+        ...payment,
+        createdAt: now
+      });
+      
+      paymentId = paymentRef.id;
+      console.log('💳 Created payment record:', paymentId);
+    }
+    
+    // Create enrollment with proper payment reference
     const enrollmentsRef = collection(firestore, 'enrollments');
     const enrollmentRef = doc(enrollmentsRef);
-    const now = Timestamp.now();
+    
+    // Build payment object conditionally to avoid undefined values
+    const paymentObject: any = {
+      amount: paymentData?.amount || (isPaidWorkshop ? workshop.price : 0),
+      currency: paymentData?.currency || 'INR',
+      status: paymentData?.status || (isPaidWorkshop ? 'completed' : 'completed'),
+      paymentMethod: paymentData?.paymentMethod || (isPaidWorkshop ? 'razorpay' : 'free')
+    };
+    
+    // Only add optional fields if they exist
+    if (paymentData?.originalAmount !== undefined) {
+      paymentObject.originalAmount = paymentData.originalAmount;
+    }
+    if (paymentData?.originalCurrency) {
+      paymentObject.originalCurrency = paymentData.originalCurrency;
+    }
+    if (paymentData?.exchangeRate !== undefined) {
+      paymentObject.exchangeRate = paymentData.exchangeRate;
+    }
+    
+    // Only add paymentId if it exists (for paid workshops)
+    if (paymentId) {
+      paymentObject.paymentId = paymentId;
+    }
+    
+    // Only add orderId if it exists
+    if (paymentData?.razorpay?.orderId) {
+      paymentObject.orderId = paymentData.razorpay.orderId;
+    }
+    
+    // Only add userLocation if it exists
+    if (paymentData?.userLocation) {
+      paymentObject.userLocation = paymentData.userLocation;
+    }
+    
+    // Only add paidAt if it has a value
+    const paidAtValue = isPaidWorkshop ? (paymentData?.status === 'completed' ? now : undefined) : now;
+    if (paidAtValue) {
+      paymentObject.paidAt = paidAtValue;
+    }
     
     const enrollment: Omit<Enrollment, 'id'> = {
       userId,
       workshopId,
       status: 'active',
       enrolledAt: now,
-      payment: {
-        amount: 0, // Will be updated if payment exists
-        currency: 'INR',
-        status: 'completed',
-        paymentMethod: 'free'
-      },
+      payment: paymentObject,
       progress: {
         currentModule: 0,
         completedModules: [],
@@ -393,53 +497,26 @@ export class FirestoreService implements IDatabaseService {
       }
     };
     
+    console.log('📝 Creating enrollment with payment reference:', {
+      enrollmentId: enrollmentRef.id,
+      paymentId: paymentId,
+      isPaidWorkshop,
+      paymentObject
+    });
+    
     batch.set(enrollmentRef, enrollment);
     
-    let paymentId: string | undefined;
-    
-    // Create payment record if payment data exists
-    if (paymentData) {
-      const paymentsRef = collection(firestore, 'payments');
-      const paymentRef = doc(paymentsRef);
-      
-      const payment: Omit<Payment, 'id' | 'createdAt'> = {
-        userId,
-        workshopId,
-        enrollmentId: enrollmentRef.id,
-        amount: paymentData.amount || 0,
-        currency: paymentData.currency || 'INR',
-        originalAmount: paymentData.originalAmount || paymentData.amount || 0,
-        originalCurrency: paymentData.originalCurrency || 'INR',
-        exchangeRate: paymentData.exchangeRate || 1,
-        status: paymentData.status || 'completed',
-        paymentMethod: paymentData.paymentMethod || 'razorpay',
-        userLocation: paymentData.userLocation,
-        razorpay: paymentData.razorpay
-      };
-      
-      batch.set(paymentRef, {
-        ...payment,
-        createdAt: now
+    // Update payment record with enrollment ID to complete the relationship chain
+    if (paymentId) {
+      batch.update(doc(firestore, 'payments', paymentId), {
+        enrollmentId: enrollmentRef.id
       });
-      
-      paymentId = paymentRef.id;
-      
-      // Update enrollment with payment details
-      batch.update(enrollmentRef, {
-        'payment.amount': payment.amount,
-        'payment.currency': payment.currency,
-        'payment.originalAmount': payment.originalAmount,
-        'payment.originalCurrency': payment.originalCurrency,
-        'payment.exchangeRate': payment.exchangeRate,
-        'payment.paymentId': payment.razorpay?.paymentId,
-        'payment.orderId': payment.razorpay?.orderId,
-        'payment.paidAt': now,
-        'payment.userLocation': payment.userLocation
-      });
+      console.log('🔗 Updated payment with enrollment ID:', enrollmentRef.id);
     }
     
     await batch.commit();
     
+    console.log('✅ Enrollment and payment relationship created successfully');
     return {
       enrollmentId: enrollmentRef.id,
       paymentId
@@ -470,28 +547,47 @@ export class FirestoreService implements IDatabaseService {
     const enrollmentsRef = collection(firestore, 'enrollments');
     const q = query(
       enrollmentsRef,
-      where('userId', '==', userId),
-      orderBy('enrolledAt', 'desc')
+      where('userId', '==', userId)
     );
     
-    return onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
-      const enrollments = querySnapshot.docs.map(doc => DataConverter.normalizeEnrollment({
-        id: doc.id,
-        ...doc.data()
-      } as Enrollment));
-      callback(enrollments);
-    });
+    return onSnapshot(q, 
+      (querySnapshot: QuerySnapshot<DocumentData>) => {
+        const enrollments = querySnapshot.docs
+          .map(doc => DataConverter.normalizeEnrollment({
+            id: doc.id,
+            ...doc.data()
+          } as Enrollment))
+          .sort((a, b) => {
+            const aTime = (a.enrolledAt as any)?.toMillis?.() || (a.enrolledAt as any)?.getTime?.() || 0;
+            const bTime = (b.enrolledAt as any)?.toMillis?.() || (b.enrolledAt as any)?.getTime?.() || 0;
+            return bTime - aTime; // Sort by newest first
+          });
+        callback(enrollments);
+      },
+      (error) => {
+        console.error('❌ Error in FirestoreService onUserEnrollments listener:', error);
+        // Return empty array on error to prevent UI issues
+        callback([]);
+      }
+    );
   }
 
   onWorkshopUpdates(workshopId: string, callback: (workshop: Workshop | null) => void): () => void {
     const workshopRef = doc(firestore, 'workshops', workshopId);
     
-    return onSnapshot(workshopRef, (doc) => {
-      if (doc.exists()) {
-        callback(DataConverter.normalizeWorkshop(doc.data() as Workshop));
-      } else {
+    return onSnapshot(workshopRef, 
+      (doc) => {
+        if (doc.exists()) {
+          callback(DataConverter.normalizeWorkshop(doc.data() as Workshop));
+        } else {
+          callback(null);
+        }
+      },
+      (error) => {
+        console.error('❌ Error in FirestoreService onWorkshopUpdates listener:', error);
+        // Return null on error to prevent UI issues
         callback(null);
       }
-    });
+    );
   }
 } 

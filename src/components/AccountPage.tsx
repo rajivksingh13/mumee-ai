@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { accountService, AccountData, AccountStats } from '../services/accountService';
+import { accountService, AccountData } from '../services/accountService';
 import { Payment } from '../services/databaseService';
 import { Timestamp } from 'firebase/firestore';
+import PurchaseHistoryPage from './PurchaseHistoryPage';
 
 const AccountPage: React.FC = () => {
   const { user } = useAuth();
@@ -22,6 +23,18 @@ const AccountPage: React.FC = () => {
     isLoading: true,
     error: null
   });
+  
+  // State for sub-page navigation
+  const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
+
+  // Navigation handlers
+  const handlePurchaseHistoryClick = () => {
+    setShowPurchaseHistory(true);
+  };
+
+  const handleBackFromPurchaseHistory = () => {
+    setShowPurchaseHistory(false);
+  };
 
   useEffect(() => {
     const loadAccountData = async () => {
@@ -37,57 +50,12 @@ const AccountPage: React.FC = () => {
     loadAccountData();
   }, [user?.uid]);
 
-  // Create dynamic dashboard cards based on user data
-  const getDashboardCards = (stats: AccountStats) => [
-    {
-      title: 'Purchase history',
-      description: `View purchases and download invoices (${accountData.payments.length} payments)`,
-      icon: (
-        <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8M8 14h6" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 4v2m8-2v2" />
-        </svg>
-      ),
-      to: '/account#purchases',
-      count: accountData.payments.length,
-    },
-    {
-      title: 'AI Tokens in Bucket',
-      description: 'AI tokens collected for your learning journey',
-      icon: (
-        <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" strokeWidth="2" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 5l1 1M19 3l1 1" />
-        </svg>
-      ),
-      to: '/account#tokens',
-      count: stats.aiTokens,
-    },
-    {
-      title: 'Learning Progress',
-      description: `Track your learning journey (${stats.totalEnrollments} enrollments)`,
-      icon: (
-        <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-      to: '/account#progress',
-      count: stats.completedWorkshops,
-    },
-    {
-      title: 'Certificates',
-      description: 'View and download your earned certificates',
-      icon: (
-        <svg className="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-        </svg>
-      ),
-      to: '/account#certificates',
-      count: stats.certificatesEarned,
-    },
-  ];
+  // Conditional rendering for sub-pages
+  if (showPurchaseHistory) {
+    return (
+      <PurchaseHistoryPage onBack={handleBackFromPurchaseHistory} />
+    );
+  }
 
   if (accountData.isLoading) {
     return (
@@ -116,8 +84,6 @@ const AccountPage: React.FC = () => {
       </div>
     );
   }
-
-  const dashboardCards = getDashboardCards(accountData.stats);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -205,35 +171,56 @@ const AccountPage: React.FC = () => {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column - Quick Actions */}
+          {/* Left Column - Quick Actions & Recent Activity */}
           <div className="lg:col-span-1">
+            {/* Quick Actions */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                {dashboardCards.map((card) => (
-                  <a
-                    key={card.title}
-                    href={card.to}
-                    className="flex items-center p-4 rounded-xl hover:bg-gray-50 transition-colors group"
-                  >
-                    <div className="flex-shrink-0 mr-4">
-                      {card.icon}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {card.title}
-                      </h3>
-                      <p className="text-sm text-gray-500">{card.description}</p>
-                    </div>
-                    {card.count !== null && (
-                      <div className="flex-shrink-0">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {card.count}
-                        </span>
-                      </div>
-                    )}
-                  </a>
-                ))}
+                {/* Purchase History */}
+                <div
+                  onClick={handlePurchaseHistoryClick}
+                  className="flex items-center p-4 rounded-xl hover:bg-gray-50 transition-colors group cursor-pointer"
+                >
+                  <div className="flex-shrink-0 mr-4">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8M8 14h6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 4v2m8-2v2" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                      Purchase History
+                    </h3>
+                    <p className="text-sm text-gray-500">View purchases and download invoices</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {accountData.payments.length}
+                    </span>
+                  </div>
+                </div>
+
+
+
+                {/* Learning Progress */}
+                <div className="flex items-center p-4 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex-shrink-0 mr-4">
+                    <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">Learning Progress</h3>
+                    <p className="text-sm text-gray-500">Track your learning journey</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      {accountData.stats.totalEnrollments}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -355,18 +342,19 @@ const AccountPage: React.FC = () => {
                               </div>
                             )}
 
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-3">
-                              <a
-                                href={getWorkshopLink(enrollment.workshopId)}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                              >
-                                Continue Learning
-                              </a>
-                              <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                View Certificate
-                              </button>
-                            </div>
+                                                         {/* Action Buttons */}
+                             <div className="flex flex-wrap gap-3">
+                               <a
+                                 href={getWorkshopLink(enrollment.workshopId)}
+                                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                               >
+                                 Continue Learning
+                               </a>
+                               {/* View Certificate button hidden for future use */}
+                               {/* <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                 View Certificate
+                               </button> */}
+                             </div>
                           </div>
                         </div>
                       </div>

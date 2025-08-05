@@ -104,9 +104,78 @@ class AccountService {
     try {
       const db = await getDatabaseService();
       const payments = await db.getUserPayments(userId);
+      
+      // If no payments found, try to create them from enrollment data
+      if (payments.length === 0) {
+        console.log('🔍 No payments found in payments collection, checking enrollments...');
+        const enrollments = await db.getUserEnrollments(userId);
+        
+        // Create payment records from enrollment data for paid workshops
+        const createdPayments = await this.createPaymentsFromEnrollments(userId, enrollments);
+        if (createdPayments.length > 0) {
+          console.log(`✅ Created ${createdPayments.length} payment records from enrollments`);
+          return createdPayments;
+        }
+      }
+      
       return payments as any;
     } catch (error) {
       console.error('❌ Error fetching payments:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Create payment records from enrollment data
+   */
+  private async createPaymentsFromEnrollments(userId: string, enrollments: any[]): Promise<Payment[]> {
+    try {
+      const db = await getDatabaseService();
+      const payments: Payment[] = [];
+      
+      for (const enrollment of enrollments) {
+        // Skip if enrollment already has a payment record
+        if (enrollment.payment?.paymentId) {
+          continue;
+        }
+        
+        // Get workshop details
+        const workshop = await db.getWorkshop(enrollment.workshopId);
+        if (!workshop || workshop.price === 0) {
+          continue; // Skip free workshops
+        }
+        
+        // Create payment record
+        const paymentData: Omit<Payment, 'id' | 'createdAt'> = {
+          userId,
+          workshopId: enrollment.workshopId,
+          enrollmentId: enrollment.id,
+          amount: enrollment.payment?.amount || workshop.price,
+          currency: enrollment.payment?.currency || 'INR',
+          status: enrollment.payment?.status || 'completed',
+          paymentMethod: enrollment.payment?.paymentMethod || 'razorpay',
+          paidAt: enrollment.payment?.paidAt || enrollment.enrolledAt,
+          userLocation: enrollment.payment?.userLocation
+        };
+        
+        try {
+          const paymentId = await db.createPayment(paymentData);
+          console.log(`✅ Created payment record: ${paymentId} for enrollment: ${enrollment.id}`);
+          
+          // Add to payments array
+          payments.push({
+            id: paymentId,
+            ...paymentData,
+            createdAt: enrollment.enrolledAt
+          } as Payment);
+        } catch (paymentError) {
+          console.error(`❌ Error creating payment for enrollment ${enrollment.id}:`, paymentError);
+        }
+      }
+      
+      return payments;
+    } catch (error) {
+      console.error('❌ Error creating payments from enrollments:', error);
       return [];
     }
   }
