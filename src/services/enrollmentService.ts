@@ -79,7 +79,7 @@ class EnrollmentService {
           exchangeRate: paymentData.exchangeRate,
           status: paymentData.status,
           paymentMethod: paymentData.paymentMethod,
-          userLocation: paymentData.userLocation,
+          ...(paymentData.userLocation && { userLocation: paymentData.userLocation }),
           razorpay: {
             paymentId: paymentData.paymentId || '',
             orderId: paymentData.orderId || ''

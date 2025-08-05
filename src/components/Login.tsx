@@ -61,8 +61,8 @@ const Login: React.FC = () => {
         navigate('/workshops/beginner?fromRedirect=true');
       } else if (redirectTo === '/workshops/foundation') {
         navigate('/workshops/foundation?fromRedirect=true');
-      } else if (redirectTo === '/workshops/advanced') {
-        navigate('/workshops/advanced?fromRedirect=true');
+      } else if (redirectTo === '/workshops/advance') {
+        navigate('/workshops/advance?fromRedirect=true');
       } else {
         navigate(redirectTo);
       }
@@ -111,8 +111,8 @@ const Login: React.FC = () => {
         navigate('/workshops/beginner?fromRedirect=true');
       } else if (redirectTo === '/workshops/foundation') {
         navigate('/workshops/foundation?fromRedirect=true');
-      } else if (redirectTo === '/workshops/advanced') {
-        navigate('/workshops/advanced?fromRedirect=true');
+      } else if (redirectTo === '/workshops/advance') {
+        navigate('/workshops/advance?fromRedirect=true');
       } else {
         navigate(redirectTo);
       }

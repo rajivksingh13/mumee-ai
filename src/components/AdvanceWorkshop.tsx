@@ -7,6 +7,7 @@ import { enrollmentService, EnrollmentStatus } from '../services/enrollmentServi
 import { paymentService } from '../services/paymentService';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { getWorkshopPricing } from '../utils/currencyUtils';
+import { buildApiUrl, API_CONFIG } from '../config/api';
 
 const AdvanceWorkshop: React.FC = () => {
   const { user } = useAuth();
@@ -85,7 +86,7 @@ const AdvanceWorkshop: React.FC = () => {
       // Only show the main workshop page with "Enroll Now" button
       setHasAutoEnrolled(true);
       // Clear the URL parameter to prevent showing welcome page again
-      window.history.replaceState({}, document.title, '/workshops/advanced');
+      window.history.replaceState({}, document.title, '/workshops/advance');
     }
   }, [user, searchParams, workshop, hasAutoEnrolled]);
 
@@ -94,7 +95,7 @@ const AdvanceWorkshop: React.FC = () => {
     
     if (!user) {
       console.log('❌ No user found, redirecting to login');
-      navigate('/login?redirect=/workshops/advanced');
+      navigate('/login?redirect=/workshops/advance');
       return;
     }
 
@@ -111,6 +112,13 @@ const AdvanceWorkshop: React.FC = () => {
       console.log('💰 Processing payment for workshop:', workshop.title);
       console.log('💰 Pricing:', pricing);
       
+      // Get user location data
+      const userLocation = locationLoading ? undefined : {
+        countryCode: countryCode || 'IN',
+        countryName: 'India', // Default for now
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      };
+
       // Process payment first
       const paymentResult = await paymentService.processPayment({
         amount: pricing.amount,
@@ -120,7 +128,8 @@ const AdvanceWorkshop: React.FC = () => {
         userName: user.displayName || 'User',
         userEmail: user.email || '',
         userId: user.uid,
-        userCountryCode: countryCode || 'IN'
+        userCountryCode: countryCode || 'IN',
+        userLocation: userLocation
       });
       
       if (paymentResult.success) {
@@ -133,10 +142,37 @@ const AdvanceWorkshop: React.FC = () => {
           status: 'completed',
           paymentMethod: 'razorpay',
           paymentId: paymentResult.paymentId,
-          orderId: paymentResult.orderId
+          orderId: paymentResult.orderId,
+          userLocation: userLocation
         });
         
         console.log('✅ Enrollment successful');
+        
+        // Send enrollment email via backend
+        try {
+          console.log('📧 Sending enrollment email...');
+          const emailResponse = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EMAIL.ENROLLMENT), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: user?.email || '',
+              courseTitle: workshop?.title || 'Advanced AI Workshop',
+              coursePrice: workshop?.price || 0,
+              paymentId: paymentResult.paymentId || 'PAID_ENROLLMENT',
+              orderId: paymentResult.orderId || `paid_${Date.now()}`,
+              userName: user?.displayName || 'User',
+            }),
+          });
+          if (emailResponse.ok) {
+            console.log('✅ Enrollment email sent successfully');
+          } else {
+            console.error('❌ Failed to send enrollment email');
+          }
+        } catch (emailError) {
+          console.error('❌ Error sending enrollment email:', emailError);
+          // Don't block enrollment if email fails
+        }
+        
         setEnrollmentSuccess(true);
         
         // Update enrollment status
