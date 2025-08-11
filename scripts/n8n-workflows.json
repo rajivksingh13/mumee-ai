@@ -1,0 +1,384 @@
+{
+  "workflows": [
+    {
+      "name": "Excel to Firebase Upload Agent",
+      "description": "Automatically upload workshop data from Excel to Firebase",
+      "nodes": [
+        {
+          "id": "file-trigger",
+          "type": "n8n-nodes-base.fileTrigger",
+          "position": [100, 100],
+          "parameters": {
+            "filePath": "/path/to/workshop-data.xlsx",
+            "watchFor": "fileChange"
+          }
+        },
+        {
+          "id": "read-excel",
+          "type": "n8n-nodes-base.readBinaryFiles",
+          "position": [300, 100],
+          "parameters": {
+            "filePath": "={{ $json.filePath }}"
+          }
+        },
+        {
+          "id": "process-excel",
+          "type": "n8n-nodes-base.code",
+          "position": [500, 100],
+          "parameters": {
+            "jsCode": `
+const XLSX = require('xlsx');
+
+// Read Excel file
+const workbook = XLSX.read($input.all()[0].json.data, {type: 'buffer'});
+const sheetName = workbook.SheetNames[0];
+const worksheet = workbook.Sheets[sheetName];
+const data = XLSX.utils.sheet_to_json(worksheet);
+
+// Process workshop data
+const workshops = data.map(row => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  level: row.level,
+  price: Number(row.price),
+  currency: row.currency || 'INR',
+  duration: Number(row.duration),
+  format: row.format,
+  certificate: Boolean(row.certificate),
+  status: row.status,
+  featured: Boolean(row.featured),
+  slug: row.slug,
+  curriculum: row.curriculum ? JSON.parse(row.curriculum) : [],
+  createdAt: new Date(),
+  updatedAt: new Date()
+}));
+
+return workshops.map(workshop => ({json: workshop}));
+            `
+          }
+        },
+        {
+          "id": "validate-data",
+          "type": "n8n-nodes-base.code",
+          "position": [700, 100],
+          "parameters": {
+            "jsCode": `
+function validateWorkshop(workshop) {
+  const errors = [];
+  
+  const requiredFields = ['id', 'title', 'description', 'level', 'price'];
+  requiredFields.forEach(field => {
+    if (!workshop[field]) {
+      errors.push(\`Missing required field: \${field}\`);
+    }
+  });
+  
+  if (workshop.level && !['beginner', 'foundation', 'advanced'].includes(workshop.level)) {
+    errors.push('Invalid level');
+  }
+  
+  if (workshop.price && (isNaN(workshop.price) || workshop.price < 0)) {
+    errors.push('Invalid price');
+  }
+  
+  return errors;
+}
+
+const workshop = $input.all()[0].json;
+const errors = validateWorkshop(workshop);
+
+if (errors.length > 0) {
+  return [{
+    json: {
+      valid: false,
+      errors: errors,
+      workshop: workshop
+    }
+  }];
+}
+
+return [{
+  json: {
+    valid: true,
+    workshop: workshop
+  }
+}];
+            `
+          }
+        },
+        {
+          "id": "upload-firebase",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [900, 100],
+          "parameters": {
+            "url": "https://your-firebase-function.com/upload-workshop",
+            "method": "POST",
+            "body": "={{ $json }}",
+            "headers": {
+              "Content-Type": "application/json"
+            }
+          }
+        },
+        {
+          "id": "send-notification",
+          "type": "n8n-nodes-base.sendEmail",
+          "position": [1100, 100],
+          "parameters": {
+            "to": "admin@yourcompany.com",
+            "subject": "Workshop Upload Complete",
+            "message": "Workshop data has been successfully uploaded to Firebase."
+          }
+        }
+      ],
+      "connections": {
+        "file-trigger": {
+          "main": [["read-excel"]]
+        },
+        "read-excel": {
+          "main": [["process-excel"]]
+        },
+        "process-excel": {
+          "main": [["validate-data"]]
+        },
+        "validate-data": {
+          "main": [["upload-firebase"]]
+        },
+        "upload-firebase": {
+          "main": [["send-notification"]]
+        }
+      }
+    },
+    {
+      "name": "Firebase to Excel Backup Agent",
+      "description": "Export Firebase data to Excel for backup and analysis",
+      "nodes": [
+        {
+          "id": "cron-trigger",
+          "type": "n8n-nodes-base.cron",
+          "position": [100, 100],
+          "parameters": {
+            "rule": {
+              "hour": 2,
+              "minute": 0
+            }
+          }
+        },
+        {
+          "id": "read-firebase",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [300, 100],
+          "parameters": {
+            "url": "https://your-firebase-function.com/get-workshops",
+            "method": "GET"
+          }
+        },
+        {
+          "id": "process-data",
+          "type": "n8n-nodes-base.code",
+          "position": [500, 100],
+          "parameters": {
+            "jsCode": `
+const XLSX = require('xlsx');
+
+// Get workshops from Firebase
+const workshops = $input.all()[0].json.workshops;
+
+// Flatten data for Excel
+const excelData = workshops.map(workshop => ({
+  id: workshop.id,
+  title: workshop.title,
+  description: workshop.description,
+  level: workshop.level,
+  price: workshop.price,
+  currency: workshop.currency,
+  duration: workshop.duration,
+  format: workshop.format,
+  certificate: workshop.certificate,
+  status: workshop.status,
+  featured: workshop.featured,
+  slug: workshop.slug,
+  curriculum: JSON.stringify(workshop.curriculum),
+  createdAt: workshop.createdAt,
+  updatedAt: workshop.updatedAt
+}));
+
+// Create Excel workbook
+const workbook = XLSX.utils.book_new();
+const worksheet = XLSX.utils.json_to_sheet(excelData);
+XLSX.utils.book_append_sheet(workbook, worksheet, 'Workshops');
+
+// Convert to buffer
+const excelBuffer = XLSX.write(workbook, {type: 'buffer', bookType: 'xlsx'});
+
+return [{
+  json: {
+    fileName: \`workshops-export-\${new Date().toISOString().split('T')[0]}.xlsx\`,
+    data: excelBuffer.toString('base64')
+  }
+}];
+            `
+          }
+        },
+        {
+          "id": "save-file",
+          "type": "n8n-nodes-base.writeBinaryFile",
+          "position": [700, 100],
+          "parameters": {
+            "fileName": "={{ $json.fileName }}",
+            "data": "={{ $json.data }}",
+            "filePath": "/backups/"
+          }
+        }
+      ],
+      "connections": {
+        "cron-trigger": {
+          "main": [["read-firebase"]]
+        },
+        "read-firebase": {
+          "main": [["process-data"]]
+        },
+        "process-data": {
+          "main": [["save-file"]]
+        }
+      }
+    },
+    {
+      "name": "Data Sync Agent",
+      "description": "Keep Excel and Firebase data synchronized",
+      "nodes": [
+        {
+          "id": "excel-monitor",
+          "type": "n8n-nodes-base.fileTrigger",
+          "position": [100, 100],
+          "parameters": {
+            "filePath": "/path/to/workshop-data.xlsx",
+            "watchFor": "fileChange"
+          }
+        },
+        {
+          "id": "read-excel",
+          "type": "n8n-nodes-base.readBinaryFiles",
+          "position": [300, 100],
+          "parameters": {
+            "filePath": "={{ $json.filePath }}"
+          }
+        },
+        {
+          "id": "read-firebase",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [300, 300],
+          "parameters": {
+            "url": "https://your-firebase-function.com/get-workshops",
+            "method": "GET"
+          }
+        },
+        {
+          "id": "compare-data",
+          "type": "n8n-nodes-base.code",
+          "position": [500, 200],
+          "parameters": {
+            "jsCode": `
+const excelData = $input.all()[0].json;
+const firebaseData = $input.all()[1].json;
+
+// Compare data and find differences
+const differences = [];
+
+excelData.forEach(excelWorkshop => {
+  const firebaseWorkshop = firebaseData.workshops.find(fw => fw.id === excelWorkshop.id);
+  
+  if (!firebaseWorkshop) {
+    differences.push({
+      type: 'new',
+      workshop: excelWorkshop
+    });
+  } else {
+    // Compare fields
+    const fields = ['title', 'description', 'price', 'level', 'status'];
+    const changes = {};
+    
+    fields.forEach(field => {
+      if (excelWorkshop[field] !== firebaseWorkshop[field]) {
+        changes[field] = {
+          from: firebaseWorkshop[field],
+          to: excelWorkshop[field]
+        };
+      }
+    });
+    
+    if (Object.keys(changes).length > 0) {
+      differences.push({
+        type: 'update',
+        workshopId: excelWorkshop.id,
+        changes: changes
+      });
+    }
+  }
+});
+
+return [{
+  json: {
+    differences: differences,
+    timestamp: new Date().toISOString()
+  }
+}];
+            `
+          }
+        },
+        {
+          "id": "update-firebase",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [700, 200],
+          "parameters": {
+            "url": "https://your-firebase-function.com/update-workshops",
+            "method": "POST",
+            "body": "={{ $json }}"
+          }
+        },
+        {
+          "id": "log-activity",
+          "type": "n8n-nodes-base.code",
+          "position": [900, 200],
+          "parameters": {
+            "jsCode": `
+const syncResult = $input.all()[0].json;
+
+const activity = {
+  agent: 'Data Sync Agent',
+  action: 'sync',
+  timestamp: new Date().toISOString(),
+  differences: syncResult.differences.length,
+  status: 'success'
+};
+
+// Log to Firebase
+// This would typically be done via HTTP request to Firebase function
+
+return [{
+  json: activity
+}];
+            `
+          }
+        }
+      ],
+      "connections": {
+        "excel-monitor": {
+          "main": [["read-excel", "read-firebase"]]
+        },
+        "read-excel": {
+          "main": [["compare-data"]]
+        },
+        "read-firebase": {
+          "main": [["compare-data"]]
+        },
+        "compare-data": {
+          "main": [["update-firebase"]]
+        },
+        "update-firebase": {
+          "main": [["log-activity"]]
+        }
+      }
+    }
+  ]
+} 

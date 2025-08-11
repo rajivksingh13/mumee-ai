@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TitliAI Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'gradient-start': '#e3e7ef',
+                        'gradient-middle': '#d1e3f8',
+                        'gradient-end': '#b6c6e3'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #e3e7ef 0%, #d1e3f8 50%, #b6c6e3 100%);
+        }
+        .header-gradient {
+            background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+        }
+        .tab-gradient {
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-gray-900 font-sans">
+    <!-- Login Form -->
+    <div id="loginForm" class="flex items-center justify-center min-h-screen">
+        <div class="glass-effect rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-8">
+                <div class="text-4xl mb-4">🦋</div>
+                <h1 class="text-2xl font-bold text-gray-900">TitliAI Admin Access</h1>
+                <p class="text-gray-600 mt-2">Enter admin password to continue</p>
+            </div>
+            
+            <form id="adminLoginForm" class="space-y-4">
+                <div>
+                    <input
+                        type="password"
+                        id="adminPassword"
+                        placeholder="Admin Password"
+                        class="w-full px-4 py-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                    />
+                </div>
+                
+                <div id="loginError" class="text-red-600 text-sm text-center hidden"></div>
+                
+                <button
+                    type="submit"
+                    class="w-full tab-gradient text-white font-semibold py-3 px-4 rounded-lg hover:opacity-90 transition-all"
+                >
+                    Access Admin Dashboard
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="hidden">
+        <!-- Header -->
+        <div class="header-gradient text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold">🦋 TitliAI Admin Dashboard</h1>
+                        <p class="text-blue-100 mt-1">Manage users, enrollments, payments</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button
+                            onclick="loadData()"
+                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors"
+                        >
+                            🔄 Refresh
+                        </button>
+                        <button
+                            onclick="logout()"
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
+                        >
+                            🚪 Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <!-- Tabs -->
+            <div class="glass-effect rounded-xl shadow-lg p-1 mb-8">
+                <div class="flex space-x-1">
+                    <button onclick="switchTab('analytics')" class="tab-button flex-1 py-3 px-4 rounded-lg font-medium transition-all" data-tab="analytics">
+                        📊 Analytics
+                    </button>
+                    <button onclick="switchTab('users')" class="tab-button flex-1 py-3 px-4 rounded-lg font-medium transition-all" data-tab="users">
+                        👥 Users
+                    </button>
+                    <button onclick="switchTab('enrollments')" class="tab-button flex-1 py-3 px-4 rounded-lg font-medium transition-all" data-tab="enrollments">
+                        🎓 Enrollments
+                    </button>
+                    <button onclick="switchTab('payments')" class="tab-button flex-1 py-3 px-4 rounded-lg font-medium transition-all" data-tab="payments">
+                        💰 Payments
+                    </button>
+                    <button onclick="switchTab('workshops')" class="tab-button flex-1 py-3 px-4 rounded-lg font-medium transition-all" data-tab="workshops">
+                        📚 Workshops
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="glass-effect rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search..."
+                            onkeyup="filterData()"
+                            class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                    <div class="md:w-48">
+                        <select
+                            id="statusFilter"
+                            onchange="filterData()"
+                            class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="glass-effect rounded-xl shadow-lg p-6">
+                <div id="loadingSpinner" class="flex items-center justify-center py-12 hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <span class="ml-3 text-gray-600">Loading data...</span>
+                </div>
+                
+                <div id="contentArea">
+                    <!-- Content will be dynamically loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration - replace with your actual config
+        const firebaseConfig = {
+        "apiKey": "AIzaSyDNIiG_Ec_xaFvIxAcoNRPDofTauBVFXGQ",
+        "authDomain": "mumee-ai.firebaseapp.com",
+        "projectId": "mumee-ai",
+        "storageBucket": "mumee-ai.appspot.com",
+        "messagingSenderId": "534265645496",
+        "appId": "1:534265645496:web:4a529a41833620ab21a74d"
+};
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Admin password
+        const ADMIN_PASSWORD = 'titliAI2025!';
+        let currentTab = 'analytics';
+        let allData = {
+            users: [],
+            enrollments: [],
+            payments: [],
+            workshops: []
+        };
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+                showDashboard();
+            }
+        });
+
+        // Login form handler
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (password === ADMIN_PASSWORD) {
+                sessionStorage.setItem('adminAuthenticated', 'true');
+                showDashboard();
+                errorDiv.classList.add('hidden');
+            } else {
+                errorDiv.textContent = 'Invalid password';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        function showDashboard() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            loadData();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('adminAuthenticated');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('tab-gradient', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:bg-white/50');
+            });
+            
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('tab-gradient', 'text-white');
+            document.querySelector(`[data-tab="${tab}"]`).classList.remove('text-gray-600', 'hover:bg-white/50');
+            
+            renderContent();
+        }
+
+        async function loadData() {
+            showLoading(true);
+            
+            try {
+                console.log('🔍 Loading data for tab:', currentTab);
+                
+                // Load all data in parallel
+                const [usersSnapshot, enrollmentsSnapshot, paymentsSnapshot, workshopsSnapshot] = await Promise.all([
+                    db.collection('users').get(),
+                    db.collection('enrollments').get(),
+                    db.collection('payments').get(),
+                    db.collection('workshops').get()
+                ]);
+
+                console.log('📊 Collections loaded:', {
+                    users: usersSnapshot.docs.length,
+                    enrollments: enrollmentsSnapshot.docs.length,
+                    payments: paymentsSnapshot.docs.length,
+                    workshops: workshopsSnapshot.docs.length
+                });
+
+                allData.users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allData.enrollments = enrollmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allData.payments = paymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allData.workshops = workshopsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                renderContent();
+            } catch (error) {
+                console.error('❌ Error loading data:', error);
+                showError(`Error loading data: ${error.message}. This might be due to Firestore security rules or missing collections. Check the browser console for more details.`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            const content = document.getElementById('contentArea');
+            
+            if (show) {
+                spinner.classList.remove('hidden');
+                content.classList.add('hidden');
+            } else {
+                spinner.classList.add('hidden');
+                content.classList.remove('hidden');
+            }
+        }
+
+        function showError(message) {
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">❌</div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Error</h3>
+                    <p class="text-gray-600">${message}</p>
+                </div>
+            `;
+        }
+
+        function filterData() {
+            renderContent();
+        }
+
+        function renderContent() {
+            const content = document.getElementById('contentArea');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let data = allData[currentTab] || [];
+            
+            // Apply filters
+            if (searchTerm) {
+                data = data.filter(item => 
+                    JSON.stringify(item).toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (statusFilter !== 'all') {
+                data = data.filter(item => item.status === statusFilter);
+            }
+
+            switch (currentTab) {
+                case 'analytics':
+                    content.innerHTML = renderAnalytics();
+                    break;
+                case 'users':
+                    content.innerHTML = renderUsersTable(data);
+                    break;
+                case 'enrollments':
+                    content.innerHTML = renderEnrollmentsTable(data);
+                    break;
+                case 'payments':
+                    content.innerHTML = renderPaymentsTable(data);
+                    break;
+                case 'workshops':
+                    content.innerHTML = renderWorkshopsTable(data);
+                    break;
+            }
+        }
+
+        function renderAnalytics() {
+            const users = allData.users.length;
+            const enrollments = allData.enrollments.length;
+            const payments = allData.payments.length;
+            const activeWorkshops = allData.workshops.filter(w => w.status === 'active').length;
+            
+            const totalRevenue = allData.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-effect rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-500 text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Users</p>
+                                <p class="text-2xl font-semibold text-gray-900">${users}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-500 text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Enrollments</p>
+                                <p class="text-2xl font-semibold text-gray-900">${enrollments}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-500 text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Revenue</p>
+                                <p class="text-2xl font-semibold text-gray-900">₹${totalRevenue.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-orange-500 text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Active Workshops</p>
+                                <p class="text-2xl font-semibold text-gray-900">${activeWorkshops}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderUsersTable(users) {
+            if (users.length === 0) {
+                return renderEmptyState();
+            }
+
+            const rows = users.map(user => `
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 rounded-full tab-gradient flex items-center justify-center text-white font-semibold">
+                                ${(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${user.displayName || 'N/A'}</div>
+                                <div class="text-sm text-gray-500">ID: ${user.id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.email || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.geolocation?.countryName || 'Unknown'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(user.createdAt)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="text-xs">
+                            <div>Enrollments: ${user.stats?.totalEnrollments || 0}</div>
+                            <div>Completed: ${user.stats?.completedWorkshops || 0}</div>
+                            <div>Spent: ₹${(user.stats?.totalSpent || 0).toLocaleString()}</div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full glass-effect border border-blue-100 rounded-lg shadow-lg">
+                        <thead class="header-gradient text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Location</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Joined</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Stats</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-blue-100">
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderEnrollmentsTable(enrollments) {
+            if (enrollments.length === 0) {
+                return renderEmptyState();
+            }
+
+            const rows = enrollments.map(enrollment => {
+                // Find user details for this enrollment
+                const user = allData.users.find(u => u.id === enrollment.userId);
+                const userName = user ? (user.displayName || user.email || 'Unknown User') : 'Unknown User';
+                const userEmail = user ? user.email : 'N/A';
+                
+                // Find workshop details for this enrollment
+                const workshop = allData.workshops.find(w => w.id === enrollment.workshopId);
+                const workshopName = workshop ? workshop.title : 'Unknown Workshop';
+                
+                return `
+                    <tr class="hover:bg-blue-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${enrollment.id.substring(0, 8)}...
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-8 w-8 rounded-full tab-gradient flex items-center justify-center text-white font-semibold text-xs">
+                                    ${userName.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900">${userName}</div>
+                                    <div class="text-xs text-gray-500">${userEmail}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="text-sm font-medium text-gray-900">${workshopName}</div>
+                            <div class="text-xs text-gray-500">${enrollment.workshopId.substring(0, 8)}...</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(enrollment.status)}">
+                                ${enrollment.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="tab-gradient h-2 rounded-full" style="width: ${enrollment.progress?.percentageComplete || 0}%"></div>
+                            </div>
+                            <span class="text-xs text-gray-500">${enrollment.progress?.percentageComplete || 0}%</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${formatDate(enrollment.enrolledAt)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="text-xs">
+                                <div>₹${(enrollment.payment?.amount || 0).toLocaleString()}</div>
+                                <div class="inline-flex px-1 py-0.5 text-xs font-semibold rounded ${getStatusColor(enrollment.payment?.status)}">
+                                    ${enrollment.payment?.status || 'N/A'}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full glass-effect border border-blue-100 rounded-lg shadow-lg">
+                        <thead class="header-gradient text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Enrollment ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Workshop</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Progress</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Enrolled</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Payment</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-blue-100">
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderPaymentsTable(payments) {
+            if (payments.length === 0) {
+                return renderEmptyState();
+            }
+
+            const rows = payments.map(payment => {
+                // Find user details for this payment
+                const user = allData.users.find(u => u.id === payment.userId);
+                const userName = user ? (user.displayName || user.email || 'Unknown User') : 'Unknown User';
+                const userEmail = user ? user.email : 'N/A';
+                
+                // Find workshop details for this payment
+                const workshop = allData.workshops.find(w => w.id === payment.workshopId);
+                const workshopName = workshop ? workshop.title : 'Unknown Workshop';
+                
+                return `
+                    <tr class="hover:bg-blue-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${payment.id.substring(0, 8)}...
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-8 w-8 rounded-full tab-gradient flex items-center justify-center text-white font-semibold text-xs">
+                                    ${userName.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900">${userName}</div>
+                                    <div class="text-xs text-gray-500">${userEmail}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="text-sm font-medium text-gray-900">${workshopName}</div>
+                            <div class="text-xs text-gray-500">${payment.workshopId.substring(0, 8)}...</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div>
+                                <div class="font-semibold">₹${(payment.amount || 0).toLocaleString()}</div>
+                                ${payment.originalAmount && payment.originalAmount !== payment.amount ? 
+                                    `<div class="text-xs text-gray-500">Original: ₹${payment.originalAmount.toLocaleString()}</div>` : ''
+                                }
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payment.status)}">
+                                ${payment.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span class="capitalize">${payment.paymentMethod || 'N/A'}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${formatDate(payment.createdAt)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full glass-effect border border-blue-100 rounded-lg shadow-lg">
+                        <thead class="header-gradient text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Payment ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Workshop</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Method</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-blue-100">
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderWorkshopsTable(workshops) {
+            if (workshops.length === 0) {
+                return renderEmptyState();
+            }
+
+            const rows = workshops.map(workshop => `
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 rounded-lg tab-gradient flex items-center justify-center text-white font-semibold">
+                                ${workshop.title.charAt(0)}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${workshop.title}</div>
+                                <div class="text-sm text-gray-500">${workshop.slug}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelColor(workshop.level)}">
+                            ${workshop.level}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ₹${(workshop.price || 0).toLocaleString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(workshop.status)}">
+                            ${workshop.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${workshop.duration || 0} hours
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${formatDate(workshop.createdAt)}
+                    </td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full glass-effect border border-blue-100 rounded-lg shadow-lg">
+                        <thead class="header-gradient text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Workshop</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Level</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Price</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Duration</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-blue-100">
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderEmptyState() {
+            return `
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">📭</div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No data found</h3>
+                    <p class="text-gray-600">Try adjusting your search or filter criteria</p>
+                </div>
+            `;
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'active':
+                case 'completed':
+                    return 'bg-green-100 text-green-800';
+                case 'pending':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'failed':
+                case 'cancelled':
+                    return 'bg-red-100 text-red-800';
+                case 'draft':
+                    return 'bg-gray-100 text-gray-800';
+                default:
+                    return 'bg-blue-100 text-blue-800';
+            }
+        }
+
+        function getLevelColor(level) {
+            switch (level) {
+                case 'beginner':
+                    return 'bg-green-100 text-green-800';
+                case 'foundation':
+                    return 'bg-blue-100 text-blue-800';
+                case 'advanced':
+                    return 'bg-purple-100 text-purple-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            
+            let date;
+            if (timestamp.toDate) {
+                date = timestamp.toDate();
+            } else if (timestamp.seconds) {
+                date = new Date(timestamp.seconds * 1000);
+            } else {
+                date = new Date(timestamp);
+            }
+            
+            return date.toLocaleDateString();
+        }
+
+        // Initialize with analytics tab
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+                switchTab('analytics');
+            }
+        });
+    </script>
+</body>
+</html>

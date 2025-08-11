@@ -12,7 +12,9 @@
     "update:curriculum": "node scripts/update-workshops-curriculum.js",
     "verify:workshops": "node scripts/verify-workshop-migration.js",
     "test:firebase": "node scripts/test-simple.js",
-    "test:enrollment": "node scripts/test-enrollment-flow.js"
+    "test:enrollment": "node scripts/test-enrollment-flow.js",
+    "generate:admin": "node scripts/generate-admin.js",
+    "generate:admin:render": "node scripts/generate-admin-render.js"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

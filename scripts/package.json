@@ -1,0 +1,19 @@
+{
+  "name": "firestore-export-script",
+  "version": "1.0.0",
+  "description": "Export Firestore collections to Excel",
+  "main": "export-firestore-to-excel.js",
+  "scripts": {
+    "export": "node export-firestore-to-excel.js",
+    "export-users": "node export-firestore-to-excel.js users",
+    "export-enrollments": "node export-firestore-to-excel.js enrollments",
+    "export-payments": "node export-firestore-to-excel.js payments",
+    "export-workshops": "node export-firestore-to-excel.js workshops",
+    "create-template": "node create-excel-template.js",
+    "template": "node create-excel-template.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.0",
+    "xlsx": "^0.18.5"
+  }
+} 

@@ -13,6 +13,7 @@ import SearchPage from './components/SearchPage';
 import AccountPage, { PaymentDetailsPage } from './components/AccountPage';
 import ProfilePage from './components/ProfilePage';
 
+
 import AdvanceWorkshop from './components/AdvanceWorkshop';
 
 // Placeholder components for each page

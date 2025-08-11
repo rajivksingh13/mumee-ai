@@ -91,6 +91,32 @@ export class FirestoreService implements IDatabaseService {
     await deleteDoc(userRef);
   }
 
+  async getAllUsers(): Promise<User[]> {
+    const usersRef = collection(firestore, 'users');
+    
+    try {
+      const querySnapshot = await getDocs(usersRef);
+      
+      const users = querySnapshot.docs
+        .map(doc => {
+          return DataConverter.normalizeUser({
+            id: doc.id,
+            ...doc.data()
+          } as User);
+        })
+        .sort((a, b) => {
+          const aTime = (a.createdAt as any)?.toMillis?.() || (a.createdAt as any)?.getTime?.() || 0;
+          const bTime = (b.createdAt as any)?.toMillis?.() || (b.createdAt as any)?.getTime?.() || 0;
+          return bTime - aTime; // Sort by newest first
+        });
+      
+      return users;
+    } catch (error) {
+      console.error('❌ FirestoreService: Error getting all users:', error);
+      throw error;
+    }
+  }
+
   // Workshop operations
   async createWorkshop(workshopData: Omit<Workshop, 'createdAt' | 'updatedAt'>): Promise<string> {
     const workshopRef = doc(firestore, 'workshops', workshopData.id);
@@ -194,6 +220,33 @@ export class FirestoreService implements IDatabaseService {
       return enrollments;
     } catch (error) {
       console.error('❌ FirestoreService: Error getting enrollments:', error);
+      throw error;
+    }
+  }
+
+  async getAllEnrollments(): Promise<Enrollment[]> {
+    const enrollmentsRef = collection(firestore, 'enrollments');
+    
+    try {
+      const querySnapshot = await getDocs(enrollmentsRef);
+      
+      // Sort in memory instead of using orderBy to avoid composite index requirement
+      const enrollments = querySnapshot.docs
+        .map(doc => {
+          return DataConverter.normalizeEnrollment({
+            id: doc.id,
+            ...doc.data()
+          } as Enrollment);
+        })
+        .sort((a, b) => {
+          const aTime = (a.enrolledAt as any)?.toMillis?.() || (a.enrolledAt as any)?.getTime?.() || 0;
+          const bTime = (b.enrolledAt as any)?.toMillis?.() || (b.enrolledAt as any)?.getTime?.() || 0;
+          return bTime - aTime; // Sort by newest first
+        });
+      
+      return enrollments;
+    } catch (error) {
+      console.error('❌ FirestoreService: Error getting all enrollments:', error);
       throw error;
     }
   }
