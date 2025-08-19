@@ -91,20 +91,9 @@ const AccountPage: React.FC = () => {
         
         {/* Header Section */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
-              <p className="text-gray-600">Welcome back, {user?.displayName || 'User'}! Here's your learning dashboard.</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                {user?.displayName?.[0] || user?.email?.[0] || 'U'}
-              </div>
-              <div className="hidden sm:block">
-                <p className="font-medium text-gray-900">{user?.displayName || 'User'}</p>
-                <p className="text-sm text-gray-500">{user?.email}</p>
-              </div>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
+            <p className="text-gray-600">Welcome back! Here's your learning dashboard.</p>
           </div>
         </div>
 
