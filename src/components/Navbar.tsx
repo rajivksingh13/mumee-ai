@@ -152,16 +152,16 @@ const Navbar: React.FC = () => {
             </button>
             <div
               id="explore-menu"
-              className={`absolute left-0 top-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top ${dropdown ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
-              style={{ minWidth: '48rem' }}
+              className={`absolute left-0 md:left-0 right-0 md:right-auto top-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top ${dropdown ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
+              style={{ minWidth: 'min(48rem, 90vw)' }}
               role="menu"
               aria-label="Explore"
               onMouseEnter={handleDropdownEnter}
               onMouseLeave={handleDropdownLeave}
             >
-              <div className="flex">
+              <div className="flex flex-col md:flex-row">
                 {/* Column 1: AI Workshops */}
-                <div className="px-6 py-4 border-r border-gray-100 flex-1">
+                <div className="px-6 py-4 border-b md:border-b-0 md:border-r border-gray-100 flex-1">
                   <div className="text-sm font-semibold text-gray-900 mb-3">AI Workshops</div>
                   <div className="space-y-2">
                     {offerings.filter(link => link.category === 'AI Workshops').map(link => (
@@ -180,7 +180,7 @@ const Navbar: React.FC = () => {
                 </div>
 
                 {/* Column 2: AI Consultant */}
-                <div className="px-6 py-4 border-r border-gray-100 flex-1">
+                <div className="px-6 py-4 border-b md:border-b-0 md:border-r border-gray-100 flex-1">
                   <div className="text-sm font-semibold text-gray-900 mb-3">AI Consultant</div>
                   <div className="space-y-2">
                     {offerings.filter(link => link.category === 'AI Consultant').map(link => (
@@ -199,7 +199,7 @@ const Navbar: React.FC = () => {
                 </div>
 
                 {/* Column 3: AI Services */}
-                <div className="px-6 py-4 border-r border-gray-100 flex-1">
+                <div className="px-6 py-4 border-b md:border-b-0 md:border-r border-gray-100 flex-1">
                   <div className="text-sm font-semibold text-gray-900 mb-3">AI Services</div>
                   <div className="space-y-2">
                     {offerings.filter(link => link.category === 'AI Services').map(link => (
@@ -218,7 +218,7 @@ const Navbar: React.FC = () => {
                 </div>
                 
                 {/* Column 4: Tech Blogs */}
-                <div className="px-6 py-4 flex-1">
+                <div className="px-6 py-4 border-b md:border-b-0 flex-1">
                   <div className="text-sm font-semibold text-gray-900 mb-3">Tech Blogs</div>
                   <div className="space-y-2">
                     {techBlogs.map(blog => (
