@@ -1,23 +1,64 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-// Search data - this could be expanded with more content
+// Comprehensive search data for all titliAI pages and offerings
 const searchData = [
-  { id: 1, title: 'AI Workshops', type: 'Offering', path: '/workshops', description: 'Hands-on AI workshops for all levels' },
-  { id: 2, title: 'Foundation Workshop', type: 'Workshop', path: '/workshops/foundation', description: 'Learn the fundamentals of AI and machine learning' },
-  { id: 3, title: 'AI Consultant', type: 'Offering', path: '/consultant', description: 'Expert AI consulting for your business' },
-  { id: 4, title: 'AI Library', type: 'Offering', path: '/library', description: 'GenAI books & AI-generated comics' },
-  { id: 5, title: 'AI Labs', type: 'Offering', path: '/labs', description: 'Experiment with the latest AI tools' },
-  { id: 6, title: 'AI-Agents Marketplace', type: 'Offering', path: '/marketplace', description: 'Discover and deploy AI agents' },
-  { id: 7, title: 'AI Training', type: 'Offering', path: '/training', description: 'AI training programs for upskilling' },
-  { id: 8, title: 'AI Certifications', type: 'Offering', path: '/certifications', description: 'Get certified in AI technologies' },
-  { id: 9, title: 'AI Blogs', type: 'Offering', path: '/blogs', description: 'Stay updated with AI trends' },
-  { id: 10, title: 'Machine Learning', type: 'Topic', path: '/workshops', description: 'Learn machine learning fundamentals' },
-  { id: 11, title: 'Deep Learning', type: 'Topic', path: '/workshops', description: 'Advanced neural networks and deep learning' },
-  { id: 12, title: 'Natural Language Processing', type: 'Topic', path: '/workshops', description: 'AI for text and language understanding' },
-  { id: 13, title: 'Computer Vision', type: 'Topic', path: '/workshops', description: 'AI for image and video analysis' },
-  { id: 14, title: 'Data Science', type: 'Topic', path: '/workshops', description: 'Data analysis and visualization with AI' },
-  { id: 15, title: 'Prompt Engineering', type: 'Topic', path: '/workshops', description: 'Master the art of AI prompt design' },
+  // Main Pages
+  { id: 1, title: 'Home', type: 'Page', path: '/', description: 'Welcome to titliAI - Your AI Learning Platform' },
+  { id: 2, title: 'titliHub', type: 'Page', path: '/titlihub', description: 'Central hub for all titliAI resources and tools' },
+  
+  // AI Workshops - All Levels
+  { id: 3, title: 'AI Workshops', type: 'Offering', path: '/workshops', description: 'Hands-on AI workshops for all levels' },
+  { id: 4, title: 'Absolute Beginner', type: 'Workshop', path: '/workshops/beginner', description: 'Start your AI journey from scratch - no prior experience needed' },
+  { id: 5, title: 'Foundation Level', type: 'Workshop', path: '/workshops/foundation', description: 'Learn the fundamentals of AI and machine learning' },
+  { id: 6, title: 'Advance Level', type: 'Workshop', path: '/workshops/advance', description: 'Advanced AI concepts and practical applications' },
+  
+  // Core Offerings
+  { id: 7, title: 'AI Consultant', type: 'Offering', path: '/consultant', description: 'Expert AI consulting for your business' },
+  { id: 8, title: 'AI Library', type: 'Offering', path: '/library', description: 'GenAI books & AI-generated comics' },
+  { id: 9, title: 'AI Labs', type: 'Offering', path: '/labs', description: 'Experiment with the latest AI tools' },
+  { id: 10, title: 'AI-Agents Marketplace', type: 'Offering', path: '/marketplace', description: 'Discover and deploy AI agents' },
+  { id: 11, title: 'AI Training', type: 'Offering', path: '/training', description: 'AI training programs for upskilling' },
+  { id: 12, title: 'AI Certifications', type: 'Offering', path: '/certifications', description: 'Get certified in AI technologies' },
+  { id: 13, title: 'AI Blogs', type: 'Offering', path: '/blogs', description: 'Stay updated with AI trends' },
+  
+  // AI Topics & Skills
+  { id: 14, title: 'Machine Learning', type: 'Topic', path: '/workshops', description: 'Learn machine learning fundamentals' },
+  { id: 15, title: 'Deep Learning', type: 'Topic', path: '/workshops', description: 'Advanced neural networks and deep learning' },
+  { id: 16, title: 'Natural Language Processing', type: 'Topic', path: '/workshops', description: 'AI for text and language understanding' },
+  { id: 17, title: 'Computer Vision', type: 'Topic', path: '/workshops', description: 'AI for image and video analysis' },
+  { id: 18, title: 'Data Science', type: 'Topic', path: '/workshops', description: 'Data analysis and visualization with AI' },
+  { id: 19, title: 'Prompt Engineering', type: 'Topic', path: '/workshops', description: 'Master the art of AI prompt design' },
+  { id: 20, title: 'Artificial Intelligence', type: 'Topic', path: '/workshops', description: 'Comprehensive AI learning and applications' },
+  { id: 21, title: 'Neural Networks', type: 'Topic', path: '/workshops', description: 'Understanding and building neural networks' },
+  { id: 22, title: 'AI Ethics', type: 'Topic', path: '/workshops', description: 'Ethical considerations in AI development' },
+  { id: 23, title: 'AI Tools', type: 'Topic', path: '/workshops', description: 'Practical AI tools and frameworks' },
+  
+  // User Account & Features
+  { id: 24, title: 'My Account', type: 'Page', path: '/account', description: 'Manage your titliAI account and preferences' },
+  { id: 25, title: 'Purchase History', type: 'Page', path: '/purchase-history', description: 'View your workshop and course purchases' },
+  { id: 26, title: 'Profile', type: 'Page', path: '/profile', description: 'Update your profile and learning preferences' },
+  
+  // Authentication
+  { id: 27, title: 'Login', type: 'Page', path: '/login', description: 'Sign in to your titliAI account' },
+  { id: 28, title: 'Sign Up', type: 'Page', path: '/signup', description: 'Create a new titliAI account' },
+  { id: 29, title: 'Join for Free', type: 'Page', path: '/signup', description: 'Start your free titliAI journey' },
+  
+  // Tech Blogs
+  { id: 30, title: 'Techno-Pulse', type: 'Blog', path: 'https://www.techno-pulse.com/', description: 'Technology Simplified - External tech blog' },
+  { id: 31, title: 'TeachLea', type: 'Blog', path: 'https://www.teachlea.com/', description: 'Learning Platform - External educational blog' },
+  
+  // titliHub Features
+  { id: 32, title: 'Chatbot', type: 'Feature', path: '/titlihub', description: 'AI-powered chatbot for instant help and guidance' },
+  { id: 33, title: 'AI Assistant', type: 'Feature', path: '/titlihub', description: 'Interactive AI assistant to answer your questions' },
+  { id: 34, title: 'Chat Bot', type: 'Feature', path: '/titlihub', description: 'Simple chat bot for customer support and queries' },
+  { id: 35, title: 'AI Chat', type: 'Feature', path: '/titlihub', description: 'Chat with AI for learning assistance and support' },
+  
+  // Additional AI Concepts
+  { id: 36, title: 'Generative AI', type: 'Topic', path: '/workshops', description: 'Create content with AI - text, images, and more' },
+  { id: 37, title: 'AI Applications', type: 'Topic', path: '/workshops', description: 'Real-world AI applications and use cases' },
+  { id: 38, title: 'AI Development', type: 'Topic', path: '/workshops', description: 'Learn to develop AI applications and systems' },
+  { id: 39, title: 'AI Business', type: 'Topic', path: '/workshops', description: 'AI for business strategy and implementation' },
 ];
 
 interface SearchResult {
@@ -116,6 +157,9 @@ const SearchBar: React.FC = () => {
       case 'Workshop': return '🎓';
       case 'Offering': return '💡';
       case 'Topic': return '📚';
+      case 'Page': return '🏠';
+      case 'Blog': return '📝';
+      case 'Feature': return '🤖';
       default: return '🔍';
     }
   };
@@ -125,6 +169,9 @@ const SearchBar: React.FC = () => {
       case 'Workshop': return 'text-blue-400';
       case 'Offering': return 'text-green-400';
       case 'Topic': return 'text-purple-400';
+      case 'Page': return 'text-indigo-400';
+      case 'Blog': return 'text-orange-400';
+      case 'Feature': return 'text-teal-400';
       default: return 'text-gray-400';
     }
   };
@@ -132,30 +179,25 @@ const SearchBar: React.FC = () => {
   return (
     <div ref={searchRef} className="relative flex-1 max-w-md mx-4 md:mx-4 mx-0">
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim() !== '' && results.length > 0 && setIsOpen(true)}
-          placeholder="Search titliAI offerings, workshops, topics..."
-          className="block w-full pl-10 pr-12 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="Search titliAI"
+          className="block w-full pl-4 pr-12 py-2 border border-gray-300 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
         />
-        <Link
-          to="/search"
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
-          title="Advanced search"
+        <button
+          type="button"
+          className="absolute inset-y-0 right-0 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full w-8 h-8 transition-colors"
+          style={{ right: '4px', top: '50%', transform: 'translateY(-50%)' }}
+          title="Search"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-        </Link>
+        </button>
         {query && (
           <button
             onClick={() => {
@@ -165,7 +207,7 @@ const SearchBar: React.FC = () => {
             }}
             className="absolute inset-y-0 right-0 pr-12 flex items-center"
           >
-            <svg className="h-5 w-5 text-gray-400 hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -174,32 +216,32 @@ const SearchBar: React.FC = () => {
 
       {/* Search Results Dropdown */}
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-96 overflow-y-auto">
           <div className="py-2">
             {results.map((result, index) => (
               <button
                 key={result.id}
                 onClick={() => handleResultClick(result)}
-                className={`w-full px-4 py-3 text-left hover:bg-gray-800 focus:bg-gray-800 focus:outline-none transition-colors ${
-                  index === selectedIndex ? 'bg-gray-800' : ''
+                className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors ${
+                  index === selectedIndex ? 'bg-gray-50' : ''
                 }`}
               >
                 <div className="flex items-start space-x-3">
                   <div className="text-lg">{getTypeIcon(result.type)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <h4 className="text-white font-medium truncate">{result.title}</h4>
-                      <span className={`text-xs px-2 py-1 rounded-full bg-gray-700 ${getTypeColor(result.type)}`}>
+                      <h4 className="text-gray-900 font-medium truncate">{result.title}</h4>
+                      <span className={`text-xs px-2 py-1 rounded-full bg-gray-100 ${getTypeColor(result.type)}`}>
                         {result.type}
                       </span>
                     </div>
-                    <p className="text-gray-400 text-sm mt-1 line-clamp-2">{result.description}</p>
+                    <p className="text-gray-600 text-sm mt-1 line-clamp-2">{result.description}</p>
                   </div>
                 </div>
               </button>
             ))}
           </div>
-          <div className="border-t border-gray-700 px-4 py-2">
+          <div className="border-t border-gray-200 px-4 py-2">
             <p className="text-xs text-gray-500">
               Press Enter to select, Esc to close
             </p>
@@ -209,11 +251,11 @@ const SearchBar: React.FC = () => {
 
       {/* No Results */}
       {isOpen && query.trim() !== '' && results.length === 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl">
           <div className="px-4 py-6 text-center">
             <div className="text-gray-400 text-lg mb-2">🔍</div>
-            <p className="text-gray-300 font-medium">No results found</p>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-gray-900 font-medium">No results found</p>
+            <p className="text-gray-600 text-sm mt-1">
               Try searching for workshops, offerings, or topics
             </p>
           </div>

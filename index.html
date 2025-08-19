@@ -10,6 +10,44 @@
     <title>titliAI</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+    <style>
+      /* Fix ElevenLabs chat widget z-index to prevent footer overlap */
+      elevenlabs-convai {
+        z-index: 999 !important;
+        bottom: 80px !important; /* Add bottom margin to avoid footer */
+      }
+      
+      /* Ensure footer has higher z-index and proper positioning */
+      footer {
+        position: relative;
+        z-index: 1000 !important;
+      }
+      
+      /* Additional safety for footer navigation */
+      .bg-gray-900 {
+        position: relative;
+        z-index: 1000 !important;
+      }
+      
+      /* Ensure footer links are clickable */
+      footer a, footer button {
+        position: relative;
+        z-index: 1001 !important;
+      }
+      
+      /* Additional safety for footer content */
+      footer * {
+        position: relative;
+        z-index: 1001 !important;
+      }
+      
+      /* Ensure chat widget doesn't overlap footer on mobile */
+      @media (max-width: 768px) {
+        elevenlabs-convai {
+          bottom: 100px !important;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -202,9 +202,9 @@ const BeginnerWorkshop: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-700">Loading workshop data...</p>
           </div>
@@ -216,15 +216,15 @@ const BeginnerWorkshop: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-white/70 border border-red-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
             <div className="text-6xl mb-6">❌</div>
             <h1 className="text-3xl font-bold text-red-600 mb-4">Error Loading Workshop</h1>
             <p className="text-gray-700 mb-6">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
             >
               Try Again
             </button>
@@ -237,9 +237,9 @@ const BeginnerWorkshop: React.FC = () => {
   // Welcome success page after login redirect
   if (enrollmentSuccess) {
     return (
-      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-white/70 border border-green-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
             <div className="text-6xl mb-6">🎉</div>
             <h1 className="text-3xl font-bold text-green-600 mb-4">Enrollment Successful!</h1>
             <p className="text-gray-700 mb-6">
@@ -253,7 +253,7 @@ const BeginnerWorkshop: React.FC = () => {
               onClick={() => {
                 setEnrollmentSuccess(false);
               }}
-              className="bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition"
             >
               Start Learning
             </button>
@@ -266,107 +266,356 @@ const BeginnerWorkshop: React.FC = () => {
   // Main workshop page
   return (
     <>
-      <div className="bg-gradient-to-br from-[#e3e7ef] via-[#d1e3f8] to-[#b6c6e3] min-h-screen py-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Back Navigation */}
-          <div className="mb-8">
-            <Link
-              to="/workshops"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to All Workshops
-            </Link>
-          </div>
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+        {/* Header Section */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Breadcrumb Navigation */}
+            <div className="mb-6">
+              <nav className="flex" aria-label="Breadcrumb">
+                <ol className="flex items-center space-x-4">
+                  <li>
+                    <Link to="/" className="text-gray-500 hover:text-gray-700">
+                      Home
+                    </Link>
+                  </li>
+                  <li>
+                    <div className="flex items-center">
+                      <svg className="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <span className="ml-4 text-gray-900 font-medium">Beginner AI Workshop</span>
+                    </div>
+                  </li>
+                </ol>
+              </nav>
+            </div>
 
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-blue-600 mb-6">
-              {workshop?.title || 'Beginner AI Workshop'}
-            </h1>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-              {workshop?.description || 'Start your AI journey with our comprehensive beginner workshop covering fundamental concepts, practical applications, and hands-on projects.'}
-            </p>
-          </div>
+            {/* Course Header */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <div className="mb-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    Free Course
+                  </span>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                  {workshop?.title || 'Beginner AI Workshop'}
+                </h1>
+                <p className="text-xl text-gray-600 mb-6 leading-relaxed">
+                  {workshop?.description || 'Start your AI journey with our comprehensive beginner workshop covering fundamental concepts, practical applications, and hands-on projects.'}
+                </p>
+                
+                {/* Enrollment Stats */}
+                <div className="flex items-center mb-6">
+                  <div className="flex items-center mr-6">
+                    <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="text-gray-600 font-medium">1,234+ learners enrolled</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-gray-600">{workshop?.duration || 8} hours</span>
+                  </div>
+                </div>
 
+                {/* Course Stats */}
+                <div className="flex flex-wrap gap-6 mb-6">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-gray-600">Beginner Level</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-gray-600">Self-paced</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-gray-600">Certificate Included</span>
+                  </div>
+                </div>
+
+                {/* Instructor Info */}
+                <div className="flex items-center mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                    AI
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Taught by</p>
+                    <p className="font-semibold text-gray-900">titliAI Expert Team</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enrollment Card */}
+              <div className="lg:col-span-1">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 sticky top-8">
+                  {!enrollmentStatus.isEnrolled ? (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="text-4xl font-bold text-green-600 mb-2">
+                          {pricing.formattedPrice}
+                        </div>
+                        <div className="text-gray-600">Free workshop</div>
+                      </div>
+                      <button
+                        onClick={handleEnroll}
+                        disabled={isEnrolling}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isEnrolling ? 'Enrolling...' : 'Enroll for Free'}
+                      </button>
+                      <p className="text-sm text-gray-500 mt-3 text-center">
+                        Get instant access to all workshop materials
+                      </p>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <div className="flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 className="text-xl font-bold text-green-800">Successfully Enrolled!</h3>
+                      </div>
+                      <p className="text-green-700 mb-4">You're all set to start your AI journey.</p>
+                      <button 
+                        onClick={handleJoinLiveSession}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition flex items-center justify-center mx-auto"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Join Live Session
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
+            {/* Left Column - Main Content */}
             <div className="lg:col-span-2">
-              {/* Workshop Overview */}
-              <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-8 mb-8 backdrop-blur-2xl">
-                <h2 className="text-2xl font-bold text-blue-600 mb-4">Workshop Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Course Overview */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Overview</h2>
+                <p className="text-gray-700 leading-relaxed mb-6">
+                  This comprehensive beginner workshop provides an introduction to Artificial Intelligence, covering fundamental concepts, practical applications, and hands-on projects. 
+                  You'll learn how to understand AI basics, build simple AI applications, and explore the exciting world of machine learning. 
+                  Designed for complete beginners, this course requires no prior experience with AI or programming.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Duration</h3>
-                    <p className="text-gray-700">{workshop?.duration || 8} hours</p>
+                    <p className="text-gray-600">{workshop?.duration || 8} hours of self-paced learning</p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Level</h3>
-                    <p className="text-gray-700">Beginner</p>
+                    <p className="text-gray-600">Perfect for complete beginners</p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Format</h3>
-                    <p className="text-gray-700">{workshop?.format || 'Online Self-Paced'}</p>
+                    <p className="text-gray-600">Video lessons, interactive exercises, and projects</p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Certificate</h3>
-                    <p className="text-gray-700">{workshop?.certificate ? 'Included' : 'Not Included'}</p>
+                    <p className="text-gray-600">Free certificate upon completion</p>
                   </div>
                 </div>
-                <p className="text-gray-700">
-                  {workshop?.overview?.description || 'This workshop is perfect for beginners who want to understand AI fundamentals, machine learning basics, and practical applications.'}
-                </p>
               </div>
 
-              {/* Curriculum */}
-              <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-8 backdrop-blur-2xl">
-                <h2 className="text-2xl font-bold text-blue-600 mb-6">Curriculum</h2>
+              {/* What You'll Learn */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">What You'll Learn</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700">Master AI fundamentals and core concepts</span>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700">Build practical AI applications</span>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700">Understand machine learning basics</span>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700">Get hands-on with real projects</span>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700">Learn AI safety and ethical considerations</span>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700">Explore real-world AI use cases</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills You'll Gain */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Skills You'll Gain</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-900 mb-2">AI Fundamentals</h3>
+                    <p className="text-blue-700 text-sm">Understand core AI concepts, types of AI, and how they work</p>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-purple-900 mb-2">Machine Learning Basics</h3>
+                    <p className="text-purple-700 text-sm">Learn about supervised, unsupervised, and reinforcement learning</p>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-green-900 mb-2">Practical Applications</h3>
+                    <p className="text-green-700 text-sm">Build simple AI models and understand their real-world uses</p>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-orange-900 mb-2">AI Safety & Ethics</h3>
+                    <p className="text-orange-700 text-sm">Understand AI limitations and responsible AI development</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Who Should Enroll */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Who Should Enroll?</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-start">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1">
+                      <span className="text-blue-600 font-semibold text-sm">1</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Beginners</h3>
+                      <p className="text-gray-600 text-sm">No AI experience required. Start from the absolute basics.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 mt-1">
+                      <span className="text-purple-600 font-semibold text-sm">2</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Students</h3>
+                      <p className="text-gray-600 text-sm">Explore how AI can enhance your studies and future career.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1">
+                      <span className="text-green-600 font-semibold text-sm">3</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Professionals</h3>
+                      <p className="text-gray-600 text-sm">Understand AI to stay competitive in your industry.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3 mt-1">
+                      <span className="text-orange-600 font-semibold text-sm">4</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Curious Learners</h3>
+                      <p className="text-gray-600 text-sm">Anyone interested in understanding AI and its impact.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Course Outline */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Outline</h2>
                 
                 {workshop?.curriculum?.modules ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {workshop.curriculum.modules.map((module, index) => (
-                      <div key={module.id || index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900">{module.title}</h3>
-                          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {module.duration} hour{module.duration !== 1 ? 's' : ''}
-                          </span>
+                      <div key={module.id || index} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+                              </span>
+                              <h3 className="text-lg font-semibold text-gray-900">{module.title}</h3>
+                            </div>
+                            <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
+                              {module.duration} hour{module.duration !== 1 ? 's' : ''}
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-gray-600 mb-3">{module.description}</p>
-                        {module.lessons && (
-                          <ul className="space-y-2">
-                            {module.lessons.map((lesson, lessonIndex) => (
-                              <li key={lesson.id || lessonIndex} className="flex items-start">
-                                <span className="text-blue-500 mr-2 mt-1">•</span>
-                                <span className="text-gray-700">{lesson.title} ({lesson.duration} min)</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                        <div className="p-6">
+                          <p className="text-gray-600 mb-4">{module.description}</p>
+                          {module.lessons && (
+                            <ul className="space-y-2">
+                              {module.lessons.map((lesson, lessonIndex) => (
+                                <li key={lesson.id || lessonIndex} className="flex items-center text-gray-700">
+                                  <svg className="w-4 h-4 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                  <span>{lesson.title}</span>
+                                  <span className="ml-auto text-sm text-gray-500">({lesson.duration} min)</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : Array.isArray(workshop?.curriculum) ? (
-                  // Fallback for old curriculum structure (simple topics array)
-                  <div className="space-y-6">
+                  // Fallback for old curriculum structure
+                  <div className="space-y-4">
                     {workshop.curriculum.map((topic: any, index: number) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900">{topic.topic}</h3>
-                          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {topic.hours} hour{topic.hours !== 1 ? 's' : ''}
-                          </span>
+                      <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+                              </span>
+                              <h3 className="text-lg font-semibold text-gray-900">{topic.topic}</h3>
+                            </div>
+                            <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
+                              {topic.hours} hour{topic.hours !== 1 ? 's' : ''}
+                            </span>
+                          </div>
                         </div>
-                        <ul className="space-y-2">
-                          {topic.subTopics.map((subTopic: string, subIndex: number) => (
-                            <li key={subIndex} className="flex items-start">
-                              <span className="text-blue-500 mr-2 mt-1">•</span>
-                              <span className="text-gray-700">{subTopic}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="p-6">
+                          <ul className="space-y-2">
+                            {topic.subTopics.map((subTopic: string, subIndex: number) => (
+                              <li key={subIndex} className="flex items-center text-gray-700">
+                                <svg className="w-4 h-4 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                                <span>{subTopic}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -376,81 +625,168 @@ const BeginnerWorkshop: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* Course Format */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mt-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Format</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-start">
+                    <svg className="w-6 h-6 text-blue-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Duration</h3>
+                      <p className="text-gray-600 text-sm">{workshop?.duration || 8} hours (self-paced)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-6 h-6 text-purple-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Materials</h3>
+                      <p className="text-gray-600 text-sm">Video content, interactive exercises, and projects</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-6 h-6 text-green-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Access</h3>
+                      <p className="text-gray-600 text-sm">Free course materials with lifetime access</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <svg className="w-6 h-6 text-orange-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Certificate</h3>
+                      <p className="text-gray-600 text-sm">Free certificate upon completion</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Sidebar */}
+            {/* Right Column - Sidebar */}
             <div className="lg:col-span-1">
-              <div className="sticky top-8">
-                {/* Enrollment Card - Only show if not enrolled */}
-                {!enrollmentStatus.isEnrolled && (
-                  <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-6 backdrop-blur-2xl mb-6">
-                    <h3 className="text-xl font-bold text-blue-600 mb-4">Enroll Now</h3>
-                    <div className="mb-4">
-                      <div className="text-3xl font-bold text-green-600 mb-2">
-                        {pricing.formattedPrice}
+              <div className="space-y-6">
+                {/* Meet Your Instructors */}
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Meet Your Instructors</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
+                        AI
                       </div>
-                      <div className="text-gray-600">Free workshop</div>
-                    </div>
-                    <button
-                      onClick={handleEnroll}
-                      disabled={isEnrolling}
-                      className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-semibold py-3 px-6 rounded-lg shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
-                    </button>
-                    <p className="text-sm text-gray-500 mt-3 text-center">
-                      Get instant access to all workshop materials
-                    </p>
-                  </div>
-                )}
-
-                {/* Already Enrolled Card */}
-                {enrollmentStatus.isEnrolled && (
-                  <div className="bg-green-50 border border-green-200 rounded-2xl shadow-2xl p-6 backdrop-blur-2xl mb-6">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h3 className="text-xl font-bold text-green-800">Successfully Enrolled!</h3>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">titliAI Expert Team</h4>
+                        <p className="text-sm text-gray-600">AI Specialists & Educators</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Our team of AI experts brings years of experience in machine learning, 
+                          deep learning, and practical AI applications. We're passionate about 
+                          making AI accessible to everyone.
+                        </p>
                       </div>
-                      <p className="text-green-700 mb-4">You're all set to start your AI journey with this workshop.</p>
-                      <button 
-                        onClick={handleJoinLiveSession}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition flex items-center justify-center mx-auto"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        Join Live Session
-                      </button>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {/* Workshop Features */}
-                <div className="bg-white/70 border border-blue-100 rounded-2xl shadow-2xl p-6 backdrop-blur-2xl">
-                  <h3 className="text-xl font-bold text-blue-600 mb-4">What You'll Get</h3>
+                {/* Course Features */}
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">This course includes</h3>
                   <ul className="space-y-3">
                     <li className="flex items-center">
-                      <span className="text-green-500 mr-3">✓</span>
-                      <span className="text-gray-700">AI fundamentals and concepts</span>
+                      <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700">8 hours on-demand video</span>
                     </li>
                     <li className="flex items-center">
-                      <span className="text-green-500 mr-3">✓</span>
-                      <span className="text-gray-700">Hands-on practical projects</span>
+                      <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700">Downloadable resources</span>
                     </li>
                     <li className="flex items-center">
-                      <span className="text-green-500 mr-3">✓</span>
+                      <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                       <span className="text-gray-700">Certificate of completion</span>
                     </li>
                     <li className="flex items-center">
-                      <span className="text-green-500 mr-3">✓</span>
-                      <span className="text-gray-700">Lifetime access to materials</span>
+                      <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700">Full lifetime access</span>
                     </li>
                     <li className="flex items-center">
-                      <span className="text-green-500 mr-3">✓</span>
+                      <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700">Interactive exercises</span>
+                    </li>
+                    <li className="flex items-center">
+                      <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                       <span className="text-gray-700">Community support</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Requirements */}
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Requirements</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2 mt-1">•</span>
+                      <span className="text-gray-700">No prior AI experience required</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2 mt-1">•</span>
+                      <span className="text-gray-700">Basic computer skills</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2 mt-1">•</span>
+                      <span className="text-gray-700">Internet connection</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2 mt-1">•</span>
+                      <span className="text-gray-700">Curiosity to learn</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Why Choose This Course */}
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Why Choose This Course?</h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 text-sm">Beginner-friendly explanations</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-purple-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 text-sm">Practical hands-on learning</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 text-sm">Expert guidance throughout</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-orange-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 text-sm">Real-world applications</span>
                     </li>
                   </ul>
                 </div>
@@ -465,7 +801,7 @@ const BeginnerWorkshop: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <svg className="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -592,7 +928,7 @@ const BeginnerWorkshop: React.FC = () => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={closeLiveSessionModal}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
                 >
                   Got it
                 </button>

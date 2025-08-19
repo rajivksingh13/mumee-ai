@@ -2,7 +2,7 @@ import React from 'react';
 import ButterflyLogo from './ButterflyLogo';
 
 const Footer: React.FC = () => (
-  <footer className="bg-gray-900 text-white py-6">
+  <footer className="bg-gray-900 text-white py-6 relative z-50">
     <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
       <div className="mb-2 md:mb-0 text-center md:text-left flex items-center gap-2">
         <ButterflyLogo size="sm" />

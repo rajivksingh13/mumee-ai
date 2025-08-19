@@ -168,12 +168,12 @@
     <script>
         // Firebase configuration - replace with your actual config
         const firebaseConfig = {
-        "apiKey": "AIzaSyDNIiG_Ec_xaFvIxAcoNRPDofTauBVFXGQ",
-        "authDomain": "mumee-ai.firebaseapp.com",
-        "projectId": "mumee-ai",
-        "storageBucket": "mumee-ai.appspot.com",
-        "messagingSenderId": "534265645496",
-        "appId": "1:534265645496:web:4a529a41833620ab21a74d"
+        "apiKey": "YOUR_FIREBASE_API_KEY",
+        "authDomain": "YOUR_PROJECT_ID.firebaseapp.com",
+        "projectId": "YOUR_PROJECT_ID",
+        "storageBucket": "YOUR_PROJECT_ID.appspot.com",
+        "messagingSenderId": "YOUR_MESSAGING_SENDER_ID",
+        "appId": "YOUR_APP_ID"
 };
 
         // Initialize Firebase
@@ -181,7 +181,7 @@
         const db = firebase.firestore();
 
         // Admin password
-        const ADMIN_PASSWORD = 'titliAI2025!';
+        const ADMIN_PASSWORD = 'YOUR_ADMIN_PASSWORD';
         let currentTab = 'analytics';
         let allData = {
             users: [],

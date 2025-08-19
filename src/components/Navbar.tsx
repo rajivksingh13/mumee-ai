@@ -7,7 +7,11 @@ import ButterflyLogo from './ButterflyLogo';
 import CountryFlag from './CountryFlag';
 
 const offerings = [
-  { to: '/workshops', label: 'AI Workshops' },
+  { to: '/workshops/beginner', label: 'Absolute Beginner', category: 'AI Workshops' },
+  { to: '/workshops/foundation', label: 'Foundation Level', category: 'AI Workshops' },
+  { to: '/workshops/advance', label: 'Advance Level', category: 'AI Workshops' },
+  { to: '/ai-consultant', label: 'AI Consultant', category: 'AI Consultant' },
+  { to: '/ai-services', label: 'AI Services', category: 'AI Services' },
   // Hidden offerings - will be enabled later
   // { to: '/consultant', label: 'AI Consultant' },
   // { to: '/library', label: 'AI Library' },
@@ -39,27 +43,39 @@ const Navbar: React.FC = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const dropdownTimeoutRef = useRef<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
 
-  // Close dropdown on outside click
+  const handleDropdownEnter = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setDropdown(true);
+  };
+
+  const handleDropdownLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setDropdown(false);
+    }, 150); // 150ms delay before closing
+  };
+
+  // Close user menu on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdown(false);
-      }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setUserMenuOpen(false);
       }
     }
-    if (dropdown || userMenuOpen) {
+    if (userMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [dropdown, userMenuOpen]);
+  }, [userMenuOpen]);
 
   // Close dropdown on route change
   useEffect(() => {
@@ -67,6 +83,15 @@ const Navbar: React.FC = () => {
     setUserMenuOpen(false);
     setOpen(false);
   }, [location]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -91,92 +116,157 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-b from-gray-900 to-gray-800 border-b border-gray-800 shadow-md sticky top-0 z-50 font-sans">
+    <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        <div className="flex items-center">
-          <Link to="/" className="flex items-center text-2xl font-extrabold text-white gap-2">
+        {/* Logo and Explore */}
+        <div className="flex items-center space-x-4">
+          <Link to="/" className="flex items-center text-2xl font-extrabold text-blue-600 gap-2">
             <ButterflyLogo size="md" />
             <span>titliAI</span>
           </Link>
-        </div>
-        <div className="hidden md:flex items-center space-x-4">
-          <Link to="/" className="text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">Home</Link>
-          <SearchBar />
+          
+          {/* Explore Dropdown - Prominent position next to logo */}
           <div
             className="relative"
             ref={dropdownRef}
             tabIndex={0}
+            onMouseEnter={handleDropdownEnter}
+            onMouseLeave={handleDropdownLeave}
           >
             <button
-              className="text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 focus:outline-none"
-              onClick={() => setDropdown((d) => !d)}
+              className="bg-white hover:bg-gray-50 text-blue-600 px-4 py-2 rounded-md text-sm font-semibold transition-colors border border-blue-600 flex items-center gap-1 focus:outline-none"
               aria-haspopup="true"
               aria-expanded={dropdown}
-              aria-controls="offerings-menu"
+              aria-controls="explore-menu"
               tabIndex={-1}
             >
-              Offerings
+              Explore
               <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             <div
-              id="offerings-menu"
-              className={`absolute left-0 mt-2 w-64 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top ${dropdown ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
-              style={{ minWidth: '16rem' }}
+              id="explore-menu"
+              className={`absolute left-0 top-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top ${dropdown ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
+              style={{ minWidth: '48rem' }}
               role="menu"
-              aria-label="Offerings"
+              aria-label="Explore"
+              onMouseEnter={handleDropdownEnter}
+              onMouseLeave={handleDropdownLeave}
             >
-              {offerings.map(link => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className="block px-4 py-2 text-gray-200 hover:bg-gray-800 hover:text-indigo-400 text-sm rounded transition-colors"
-                  role="menuitem"
-                  tabIndex={dropdown ? 0 : -1}
-                  onClick={() => setDropdown(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              {/* Tech Blogs Section */}
-              <div className="border-t border-gray-700 mt-2 pt-2">
-                <div className="px-4 py-2 text-xs text-gray-400 font-medium">Tech Blogs</div>
-                {techBlogs.map(blog => (
-                  <a
-                    key={blog.name}
-                    href={blog.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-2 text-gray-200 hover:bg-gray-800 hover:text-indigo-400 text-sm rounded transition-colors group"
-                    role="menuitem"
-                    tabIndex={dropdown ? 0 : -1}
-                    onClick={() => setDropdown(false)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <span className="mr-2 text-sm">{blog.icon}</span>
-                        <div>
-                          <div className="font-medium">{blog.name}</div>
-                          <div className="text-xs text-gray-400">{blog.description}</div>
+              <div className="flex">
+                {/* Column 1: AI Workshops */}
+                <div className="px-6 py-4 border-r border-gray-100 flex-1">
+                  <div className="text-sm font-semibold text-gray-900 mb-3">AI Workshops</div>
+                  <div className="space-y-2">
+                    {offerings.filter(link => link.category === 'AI Workshops').map(link => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        className="block px-3 py-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-sm rounded transition-colors"
+                        role="menuitem"
+                        tabIndex={dropdown ? 0 : -1}
+                        onClick={() => setDropdown(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column 2: AI Consultant */}
+                <div className="px-6 py-4 border-r border-gray-100 flex-1">
+                  <div className="text-sm font-semibold text-gray-900 mb-3">AI Consultant</div>
+                  <div className="space-y-2">
+                    {offerings.filter(link => link.category === 'AI Consultant').map(link => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        className="block px-3 py-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-sm rounded transition-colors"
+                        role="menuitem"
+                        tabIndex={dropdown ? 0 : -1}
+                        onClick={() => setDropdown(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column 3: AI Services */}
+                <div className="px-6 py-4 border-r border-gray-100 flex-1">
+                  <div className="text-sm font-semibold text-gray-900 mb-3">AI Services</div>
+                  <div className="space-y-2">
+                    {offerings.filter(link => link.category === 'AI Services').map(link => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        className="block px-3 py-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-sm rounded transition-colors"
+                        role="menuitem"
+                        tabIndex={dropdown ? 0 : -1}
+                        onClick={() => setDropdown(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Column 4: Tech Blogs */}
+                <div className="px-6 py-4 flex-1">
+                  <div className="text-sm font-semibold text-gray-900 mb-3">Tech Blogs</div>
+                  <div className="space-y-2">
+                    {techBlogs.map(blog => (
+                      <a
+                        key={blog.name}
+                        href={blog.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block px-3 py-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-sm rounded transition-colors group"
+                        role="menuitem"
+                        tabIndex={dropdown ? 0 : -1}
+                        onClick={() => setDropdown(false)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <span className="mr-2 text-sm">{blog.icon}</span>
+                            <div>
+                              <div className="font-medium">{blog.name}</div>
+                              <div className="text-xs text-gray-500">{blog.description}</div>
+                            </div>
+                          </div>
+                          <svg className="w-3 h-3 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
                         </div>
-                      </div>
-                      <svg className="w-3 h-3 text-gray-400 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </div>
-                  </a>
-                ))}
+                      </a>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Center Section - Search Bar */}
+        <div className="hidden md:flex items-center flex-1 max-w-2xl mx-8">
+          <SearchBar />
+        </div>
+
+        {/* Right Section - Navigation and Auth */}
+        <div className="hidden md:flex items-center space-x-1">
+          {/* Navigation Links */}
+          <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</Link>
+          <Link to="/titlihub" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">titliHub</Link>
+
+          {/* User Menu or Auth Buttons */}
           {user ? (
             <div className="relative ml-4" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center space-x-2 text-gray-200 hover:text-indigo-400 focus:outline-none rounded-lg p-2 transition-colors"
+                className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none rounded-lg p-2 transition-colors"
                 aria-haspopup="true"
                 aria-expanded={userMenuOpen}
               >
-                <div className="w-8 h-8 rounded-full bg-indigo-200 flex items-center justify-center text-sm font-bold text-indigo-700 border-2 border-indigo-400 shadow">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700 border-2 border-blue-300 shadow">
                   {getUserInitials()}
                 </div>
                 <span className="text-sm font-medium hidden lg:block">{getUserDisplayName()}</span>
@@ -185,18 +275,18 @@ const Navbar: React.FC = () => {
                 </svg>
               </button>
               <div
-                className={`absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top-right ${userMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
+                className={`absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 transition-all duration-200 origin-top-right ${userMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'} transform`}
                 role="menu"
                 aria-label="User menu"
               >
-                <div className="px-4 py-3 border-b border-gray-800">
-                  <p className="text-sm text-gray-200 font-medium">{getUserDisplayName()}</p>
-                  <p className="text-xs text-gray-400">{user.email}</p>
+                <div className="px-4 py-3 border-b border-gray-200">
+                  <p className="text-sm text-gray-700 font-medium">{getUserDisplayName()}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
                 <div className="py-1">
                   <Link
                     to="/account"
-                    className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 hover:text-indigo-400 transition-colors"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
                     onClick={() => setUserMenuOpen(false)}
                   >
                     <div className="flex items-center">
@@ -206,10 +296,10 @@ const Navbar: React.FC = () => {
                       My Account
                     </div>
                   </Link>
-                  <div className="border-t border-gray-800">
+                  <div className="border-t border-gray-200">
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 hover:text-red-700 transition-colors"
                     >
                       <div className="flex items-center">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,17 +314,21 @@ const Navbar: React.FC = () => {
             </div>
           ) : (
             <>
-              <Link to="/login" className="ml-4 text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-semibold">Sign In</Link>
-              <Link to="/signup" className="ml-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-semibold">Sign Up</Link>
+              <Link to="/login" className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium">Log in</Link>
+              <Link to="/signup" className="bg-white hover:bg-gray-50 text-blue-600 px-4 py-2 rounded-md text-sm font-semibold transition-colors border border-blue-600">Join for Free</Link>
             </>
           )}
+
+          {/* Country Flag */}
           <div className="ml-4">
             <CountryFlag isLoggedIn={!!user} />
           </div>
         </div>
+
+        {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center gap-2">
           <CountryFlag isLoggedIn={!!user} />
-          <button onClick={() => setOpen(!open)} className="text-gray-200 focus:outline-none">
+          <button onClick={() => setOpen(!open)} className="text-gray-700 focus:outline-none">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               {open ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -245,37 +339,45 @@ const Navbar: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
       {open && (
-        <div className="md:hidden bg-gradient-to-b from-gray-900 to-gray-800 border-t border-gray-800 px-2 pt-2 pb-3 space-y-1">
+        <div className="md:hidden bg-white border-t border-gray-200 px-2 pt-2 pb-3 space-y-1">
           <div className="px-2 py-2">
             <SearchBar />
           </div>
-          <Link to="/" className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>Home</Link>
+          <Link to="/" className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>Home</Link>
+          <Link to="/titlihub" className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>titliHub</Link>
           <div className="block">
-            <div className="text-gray-200 px-3 py-2 text-base font-medium font-semibold">Offerings</div>
+            <div className="text-gray-700 px-3 py-2 text-base font-medium font-semibold">Explore</div>
             <div className="pl-2">
-              {offerings.map(link => (
-                <Link key={link.to} to={link.to} className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
-                  {link.label}
-                </Link>
-              ))}
+              {/* AI Workshops Section */}
+              <div className="mb-3">
+                <div className="text-gray-900 px-3 py-2 text-sm font-semibold">AI Workshops</div>
+                {offerings.map(link => (
+                  <Link key={link.to} to={link.to} className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+              
               {/* Mobile Tech Blogs Section */}
-              <div className="border-t border-gray-700 mt-2 pt-2">
-                <div className="text-gray-400 px-3 py-1 text-sm font-medium">Tech Blogs</div>
+              <div className="border-t border-gray-200 pt-2">
+                <div className="text-gray-900 px-3 py-2 text-sm font-semibold">Tech Blogs</div>
                 {techBlogs.map(blog => (
                   <a
                     key={blog.name}
                     href={blog.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium"
+                    className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium"
                     onClick={() => setOpen(false)}
                   >
                     <div className="flex items-center">
                       <span className="mr-2">{blog.icon}</span>
                       <div>
                         <div>{blog.name}</div>
-                        <div className="text-xs text-gray-400">{blog.description}</div>
+                        <div className="text-xs text-gray-500">{blog.description}</div>
                       </div>
                     </div>
                   </a>
@@ -285,31 +387,31 @@ const Navbar: React.FC = () => {
           </div>
           {user ? (
             <div className="mt-2 space-y-2">
-              <div className="px-3 py-2 border-b border-gray-700">
+              <div className="px-3 py-2 border-b border-gray-200">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-200 flex items-center justify-center text-sm font-bold text-indigo-700 border-2 border-indigo-400 shadow">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700 border-2 border-blue-300 shadow">
                     {getUserInitials()}
                   </div>
                   <div>
-                    <p className="text-gray-200 font-medium">{getUserDisplayName()}</p>
-                    <p className="text-xs text-gray-400">{user.email}</p>
+                    <p className="text-gray-700 font-medium">{getUserDisplayName()}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                 </div>
               </div>
-              <Link to="/account" className="block text-gray-200 hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
+              <Link to="/account" className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
                 My Account
               </Link>
-              <button onClick={handleLogout} className="w-full text-left text-red-400 hover:text-red-300 px-3 py-2 rounded-md text-base font-medium">
+              <button onClick={handleLogout} className="w-full text-left text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-base font-medium">
                 Sign Out
               </button>
             </div>
           ) : (
             <>
-              <Link to="/login" className="block mt-2 text-gray-200 hover:text-indigo-400 px-4 py-2 rounded-md text-base font-semibold" onClick={() => setOpen(false)}>
-                Sign In
+              <Link to="/login" className="block mt-2 text-blue-600 hover:text-blue-700 px-4 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
+                Login
               </Link>
-              <Link to="/signup" className="block mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-base font-semibold" onClick={() => setOpen(false)}>
-                Sign Up
+              <Link to="/signup" className="block mt-2 bg-white hover:bg-gray-50 text-blue-600 px-4 py-2 rounded-md text-base font-semibold border border-blue-600" onClick={() => setOpen(false)}>
+                Join for Free
               </Link>
             </>
           )}
