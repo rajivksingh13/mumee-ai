@@ -17,6 +17,7 @@ import ProfilePage from './components/ProfilePage';
 import AdvanceWorkshop from './components/AdvanceWorkshop';
 import TitliHub from './components/TitliHub';
 import ContactUs from './components/ContactUs';
+import ChatWidget from './components/ChatWidget';
 
 // Placeholder components for each page
 const Home = () => {
@@ -225,7 +226,7 @@ const Home = () => {
   };
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-x-hidden">
     {/* Modern Hero Section */}
     <section className="relative overflow-hidden">
       {/* Background Elements */}
@@ -239,7 +240,7 @@ const Home = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
         <div className="text-center">
           {/* Main Headline */}
-          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight px-2">
             Empowering Your Future with
             <span className="block bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
               titli<span className="text-pink-500">AI</span>
@@ -247,28 +248,28 @@ const Home = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-base md:text-lg text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed px-4">
             Transform your future with hands-on AI workshops, expert consulting, and cutting-edge tools. 
             From beginners to advanced practitioners, unlock the power of artificial intelligence.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 px-4">
             <Link 
               to="/signup" 
-              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-200 text-base"
+              className="inline-flex items-center justify-center px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-200 text-sm sm:text-base"
             >
               <span>Join for Free</span>
-              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="ml-2 w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Link>
             <Link 
               to="/titlihub" 
-              className="inline-flex items-center justify-center px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-lg shadow-xl hover:shadow-2xl border-2 border-gray-300 transform hover:-translate-y-1 transition-all duration-200 text-base"
+              className="inline-flex items-center justify-center px-4 sm:px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-lg shadow-xl hover:shadow-2xl border-2 border-gray-300 transform hover:-translate-y-1 transition-all duration-200 text-sm sm:text-base"
             >
               <span>Explore titliHub</span>
-              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="ml-2 w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </Link>
@@ -280,14 +281,14 @@ const Home = () => {
       </section>
 
       {/* Workshops & Offerings Section */}
-      <section className="py-16 bg-white">
+      <section className="py-8 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-12 px-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Explore titliAI Offerings
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
               Choose from our comprehensive range of AI workshops, tools, and expert support to accelerate your AI journey.
             </p>
           </div>
@@ -374,7 +375,7 @@ const Home = () => {
 
 
     {/* Why Choose Us */}
-    <section className="py-16 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <section className="py-8 sm:py-16 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12">
@@ -539,6 +540,7 @@ const App: React.FC = () => {
         <Route path="/enrollment-dashboard" element={<Navigate to="/account" replace />} />
       </Routes>
       <Footer />
+      <ChatWidget />
     </Router>
   );
 };

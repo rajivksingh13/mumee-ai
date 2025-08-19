@@ -14,13 +14,27 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
     <style>
-      /* Fix ElevenLabs chat widget z-index to prevent footer overlap */
-      elevenlabs-convai {
-        z-index: 999 !important;
-        bottom: 80px !important; /* Add bottom margin to avoid footer */
+      /* Custom chat widget styles */
+      .chat-widget-container {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 999;
       }
       
-      /* Ensure footer has higher z-index and proper positioning */
+      /* ElevenLabs widget positioning and styling */
+      elevenlabs-convai {
+        position: fixed !important;
+        bottom: 100px !important;
+        right: 16px !important;
+        z-index: 9998 !important;
+        max-width: 400px !important;
+        max-height: 600px !important;
+        left: auto !important;
+        top: auto !important;
+      }
+      
+      /* Ensure footer has proper positioning */
       footer {
         position: relative;
         z-index: 1000 !important;
@@ -44,17 +58,19 @@
         z-index: 1001 !important;
       }
       
-      /* Ensure chat widget doesn't overlap footer on mobile */
+      /* Mobile responsiveness for chat widget */
       @media (max-width: 768px) {
         elevenlabs-convai {
-          bottom: 100px !important;
+          bottom: 120px !important;
+          right: 8px !important;
+          max-width: calc(100vw - 16px) !important;
         }
       }
     </style>
   </head>
   <body>
     <div id="root"></div>
-    <elevenlabs-convai agent-id="agent_3801k2537j27fqctmdjw39dzx6a7"></elevenlabs-convai>
+    <elevenlabs-convai agent-id="agent_3801k2537j27fqctmdjw39dzx6a7" style="display: none;"></elevenlabs-convai>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
