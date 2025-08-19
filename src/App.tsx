@@ -242,7 +242,7 @@ const Home = () => {
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
             Empowering Your Future with
             <span className="block bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              titliAI
+              titli<span className="text-pink-500">AI</span>
             </span>
           </h1>
 
@@ -379,7 +379,7 @@ const Home = () => {
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Why Choose <span className="bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">titliAI</span>?
+            Why Choose <span className="bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">titli<span className="text-pink-500">AI</span></span>?
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Discover what makes titliAI the perfect choice for your AI learning journey

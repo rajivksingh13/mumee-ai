@@ -120,9 +120,16 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         {/* Logo and Explore */}
         <div className="flex items-center space-x-4">
-          <Link to="/" className="flex items-center text-2xl font-extrabold text-blue-600 gap-2">
-            <ButterflyLogo size="md" />
-            <span>titliAI</span>
+          <Link to="/" className="flex flex-col items-start">
+            <div className="flex items-center text-2xl font-extrabold text-blue-600 gap-2">
+              <ButterflyLogo size="md" />
+                             <span>titli<span className="text-pink-500">AI</span></span>
+            </div>
+            <div className="text-[8px] font-bold uppercase tracking-wide">
+              <span className="text-blue-600">EDUCATE</span>
+                              <span className="text-pink-500"> AUTOMATE</span>
+              <span className="text-blue-600"> TRANSFORM.</span>
+            </div>
           </Link>
           
           {/* Explore Dropdown - Prominent position next to logo */}

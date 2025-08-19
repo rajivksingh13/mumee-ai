@@ -15,7 +15,7 @@ const ButterflyLogo: React.FC<ButterflyLogoProps> = ({ size = 'md', className = 
   return (
     <div className={`relative ${sizeClasses[size]} ${className}`}>
       <img
-        src="/butterfly-logo.png"
+        src="/butterflylogo.png"
         alt="titliAI Butterfly Logo"
         className="w-full h-full object-contain"
         onError={(e) => {
