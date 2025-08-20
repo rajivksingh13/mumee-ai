@@ -21,7 +21,7 @@ const AdminPage: React.FC = () => {
   const dbService = new FirestoreService({ type: 'firestore' });
 
   // Simple admin password - in production, this should be stored securely
-  const ADMIN_PASSWORD = 'titliAI2025!';
+  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'titliAI2025!';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

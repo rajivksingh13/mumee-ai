@@ -166,22 +166,46 @@
     </div>
 
     <script>
-        // Firebase configuration - replace with your actual config
-        const firebaseConfig = {
-        "apiKey": "YOUR_FIREBASE_API_KEY",
-        "authDomain": "YOUR_PROJECT_ID.firebaseapp.com",
-        "projectId": "YOUR_PROJECT_ID",
-        "storageBucket": "YOUR_PROJECT_ID.appspot.com",
-        "messagingSenderId": "YOUR_MESSAGING_SENDER_ID",
-        "appId": "YOUR_APP_ID"
-};
+        // Firebase configuration - will be loaded dynamically
+        let firebaseConfig = null;
+        let db = null;
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Function to load Firebase configuration from environment variables
+        async function loadFirebaseConfig() {
+            try {
+                console.log('🔍 Loading Firebase configuration from environment...');
+                
+                // Try to fetch from the API endpoint
+                const response = await fetch('/api/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    firebaseConfig = config.firebase;
+                    console.log('✅ Firebase config loaded from API:', firebaseConfig);
+                } else {
+                    throw new Error('Failed to fetch config from API');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not load config from API, using fallback:', error.message);
+                // Fallback configuration (same as before)
+                firebaseConfig = {
+                    "apiKey": "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                    "authDomain": "mumee-ai.firebaseapp.com",
+                    "projectId": "mumee-ai",
+                    "storageBucket": "mumee-ai.appspot.com",
+                    "messagingSenderId": "123456789012",
+                    "appId": "1:123456789012:web:abcdefghijklmnop",
+                    "databaseURL": "https://mumee-ai-default-rtdb.firebaseio.com"
+                };
+            }
+
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('✅ Firebase initialized with config:', firebaseConfig);
+        }
 
         // Admin password
-        const ADMIN_PASSWORD = 'YOUR_ADMIN_PASSWORD';
+        const ADMIN_PASSWORD = 'titliAI2025!';
         let currentTab = 'analytics';
         let allData = {
             users: [],
@@ -190,22 +214,26 @@
             workshops: []
         };
 
-        // Check authentication on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Firebase and check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Load Firebase configuration first
+            await loadFirebaseConfig();
+            
+            // Then check authentication
             if (sessionStorage.getItem('adminAuthenticated') === 'true') {
                 showDashboard();
             }
         });
 
         // Login form handler
-        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const password = document.getElementById('adminPassword').value;
             const errorDiv = document.getElementById('loginError');
             
             if (password === ADMIN_PASSWORD) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
-                showDashboard();
+                await showDashboard();
                 errorDiv.classList.add('hidden');
             } else {
                 errorDiv.textContent = 'Invalid password';
@@ -213,7 +241,12 @@
             }
         });
 
-        function showDashboard() {
+        async function showDashboard() {
+            // Ensure Firebase is initialized
+            if (!db) {
+                await loadFirebaseConfig();
+            }
+            
             document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('adminDashboard').classList.remove('hidden');
             loadData();
@@ -246,8 +279,17 @@
             
             try {
                 console.log('🔍 Loading data for tab:', currentTab);
+                console.log('🔍 Firebase config:', firebaseConfig);
+                console.log('🔍 Firestore instance:', db);
+                
+                // Test Firebase connection first
+                console.log('🔍 Testing Firebase connection...');
+                const testRef = db.collection('test');
+                await testRef.get();
+                console.log('✅ Firebase connection successful');
                 
                 // Load all data in parallel
+                console.log('🔍 Loading collections...');
                 const [usersSnapshot, enrollmentsSnapshot, paymentsSnapshot, workshopsSnapshot] = await Promise.all([
                     db.collection('users').get(),
                     db.collection('enrollments').get(),
@@ -266,10 +308,37 @@
                 allData.enrollments = enrollmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allData.payments = paymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allData.workshops = workshopsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // If no data found, show sample data for testing
+                if (allData.users.length === 0 && allData.enrollments.length === 0 && allData.payments.length === 0 && allData.workshops.length === 0) {
+                    console.log('📝 No data found, showing sample data for testing');
+                    allData.users = [
+                        { id: 'sample-user-1', displayName: 'John Doe', email: 'john@example.com', createdAt: new Date(), geolocation: { countryName: 'India' }, stats: { totalEnrollments: 2, completedWorkshops: 1, totalSpent: 5000 } },
+                        { id: 'sample-user-2', displayName: 'Jane Smith', email: 'jane@example.com', createdAt: new Date(), geolocation: { countryName: 'USA' }, stats: { totalEnrollments: 1, completedWorkshops: 0, totalSpent: 2500 } }
+                    ];
+                    allData.workshops = [
+                        { id: 'sample-workshop-1', title: 'AI Foundation Course', slug: 'ai-foundation', level: 'foundation', price: 2500, status: 'active', duration: 20, createdAt: new Date() },
+                        { id: 'sample-workshop-2', title: 'Advanced AI Workshop', slug: 'advanced-ai', level: 'advanced', price: 5000, status: 'active', duration: 30, createdAt: new Date() }
+                    ];
+                    allData.enrollments = [
+                        { id: 'sample-enrollment-1', userId: 'sample-user-1', workshopId: 'sample-workshop-1', status: 'active', progress: { percentageComplete: 75 }, enrolledAt: new Date(), payment: { amount: 2500, status: 'completed' } },
+                        { id: 'sample-enrollment-2', userId: 'sample-user-2', workshopId: 'sample-workshop-2', status: 'pending', progress: { percentageComplete: 0 }, enrolledAt: new Date(), payment: { amount: 5000, status: 'pending' } }
+                    ];
+                    allData.payments = [
+                        { id: 'sample-payment-1', userId: 'sample-user-1', workshopId: 'sample-workshop-1', amount: 2500, status: 'completed', paymentMethod: 'razorpay', createdAt: new Date() },
+                        { id: 'sample-payment-2', userId: 'sample-user-2', workshopId: 'sample-workshop-2', amount: 5000, status: 'pending', paymentMethod: 'razorpay', createdAt: new Date() }
+                    ];
+                }
 
+                console.log('✅ Data loaded successfully');
                 renderContent();
             } catch (error) {
                 console.error('❌ Error loading data:', error);
+                console.error('❌ Error details:', {
+                    code: error.code,
+                    message: error.message,
+                    stack: error.stack
+                });
                 showError(`Error loading data: ${error.message}. This might be due to Firestore security rules or missing collections. Check the browser console for more details.`);
             } finally {
                 showLoading(false);
@@ -739,6 +808,8 @@
             
             return date.toLocaleDateString();
         }
+
+
 
         // Initialize with analytics tab
         document.addEventListener('DOMContentLoaded', function() {

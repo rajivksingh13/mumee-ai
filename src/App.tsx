@@ -18,6 +18,7 @@ import AdvanceWorkshop from './components/AdvanceWorkshop';
 import TitliHub from './components/TitliHub';
 import ContactUs from './components/ContactUs';
 import ChatWidget from './components/ChatWidget';
+import AdminPage from './components/AdminPage';
 
 // Placeholder components for each page
 const Home = () => {
@@ -537,6 +538,7 @@ const App: React.FC = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/payments" element={<PaymentDetailsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/enrollment-dashboard" element={<Navigate to="/account" replace />} />
       </Routes>
       <Footer />
