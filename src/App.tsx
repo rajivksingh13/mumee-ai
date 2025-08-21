@@ -19,6 +19,9 @@ import TitliHub from './components/TitliHub';
 import ContactUs from './components/ContactUs';
 import ChatWidget from './components/ChatWidget';
 import AdminPage from './components/AdminPage';
+import AIConsultancyPage from './components/AIConsultancyPage';
+import AIServicesPage from './components/AIServicesPage';
+import AboutUsPage from './components/AboutUsPage';
 
 // Placeholder components for each page
 const Home = () => {
@@ -523,6 +526,9 @@ const App: React.FC = () => {
         <Route path="/workshops/advance" element={<AdvanceWorkshop />} />
         <Route path="/titlihub" element={<TitliHub />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/ai-consultant" element={<AIConsultancyPage />} />
+        <Route path="/ai-services" element={<AIServicesPage />} />
+        <Route path="/about" element={<AboutUsPage />} />
         <Route path="/consultant" element={<Consultant />} />
         <Route path="/library" element={<Library />} />
         <Route path="/labs" element={<Labs />} />

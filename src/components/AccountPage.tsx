@@ -92,7 +92,9 @@ const AccountPage: React.FC = () => {
         {/* Header Section */}
         <div className="mb-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {accountData.user?.displayName || user?.displayName || user?.email?.split('@')[0] || 'My Account'}
+            </h1>
             <p className="text-gray-600">Welcome back! Here's your learning dashboard.</p>
           </div>
         </div>
