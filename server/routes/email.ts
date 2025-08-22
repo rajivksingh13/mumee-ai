@@ -3,6 +3,22 @@ import { sendEmail, validateEmail, getEmailProvider, isSupportedProvider } from 
 
 const router = express.Router();
 
+// Function to map course titles to workshop URLs
+const getWorkshopUrl = (courseTitle: string): string => {
+  const title = courseTitle.toLowerCase();
+  
+  if (title.includes('beginner') || title.includes('absolute beginner')) {
+    return '/workshops/beginner';
+  } else if (title.includes('foundation') || title.includes('foundation level')) {
+    return '/workshops/foundation';
+  } else if (title.includes('advance') || title.includes('advanced') || title.includes('advance level')) {
+    return '/workshops/advance';
+  }
+  
+  // Default fallback
+  return '/workshops/beginner';
+};
+
 // Test configuration endpoint
 router.get('/test-config', async (req, res) => {
   try {
@@ -437,7 +453,7 @@ router.post('/enrollment', async (req, res) => {
 
             <p>Ready to start learning? Click the button below to access your course:</p>
             <div style="text-align: center;">
-              <a href="https://mumee-ai.web.app/dashboard" class="button">Access Your ${courseTitle}</a>
+              <a href="https://titliai.com${getWorkshopUrl(courseTitle)}" class="button">Access Your ${courseTitle}</a>
             </div>
             
             <p>If you have any questions about the course content or need technical support, our team is here to help. You can reach us at <strong>support@titliai.com</strong>.</p>

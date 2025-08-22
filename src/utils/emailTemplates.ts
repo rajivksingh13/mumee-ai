@@ -2,6 +2,22 @@
  * Email templates for the application
  */
 
+// Function to map course titles to workshop URLs
+const getWorkshopUrl = (courseTitle: string): string => {
+  const title = courseTitle.toLowerCase();
+  
+  if (title.includes('beginner') || title.includes('absolute beginner')) {
+    return '/workshops/beginner';
+  } else if (title.includes('foundation') || title.includes('foundation level')) {
+    return '/workshops/foundation';
+  } else if (title.includes('advance') || title.includes('advanced') || title.includes('advance level')) {
+    return '/workshops/advance';
+  }
+  
+  // Default fallback
+  return '/workshops/beginner';
+};
+
 export const getEnrollmentEmailTemplate = (
   courseTitle: string,
   token: string,
@@ -61,12 +77,12 @@ export const getEnrollmentEmailTemplate = (
           <p>Thank you for enrolling in ${courseTitle}. We're excited to have you join our learning community!</p>
           <p>To complete your enrollment and access the course materials, please click the button below:</p>
           <p style="text-align: center;">
-            <a href="${window.location.origin}/dashboard?course=${courseTitle}&token=${token}" class="button">
+            <a href="${window.location.origin}${getWorkshopUrl(courseTitle)}?token=${token}" class="button">
               Access Course
             </a>
           </p>
           <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-          <p>${window.location.origin}/dashboard?course=${courseTitle}&token=${token}</p>
+          <p>${window.location.origin}${getWorkshopUrl(courseTitle)}?token=${token}</p>
           <p>This link will expire in 24 hours for security reasons.</p>
           <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
           <p>Best regards,<br>The Mumee AI Team</p>
