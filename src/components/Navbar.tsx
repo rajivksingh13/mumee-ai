@@ -334,6 +334,17 @@ const Navbar: React.FC = () => {
 
         {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center gap-2">
+          {/* Show user info in mobile header when logged in */}
+          {user && (
+            <div className="flex items-center space-x-2 mr-2">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700 border-2 border-blue-300 shadow">
+                {getUserInitials()}
+              </div>
+              <span className="text-sm font-medium text-gray-700 max-w-20 truncate">
+                {getUserDisplayName()}
+              </span>
+            </div>
+          )}
           <CountryFlag isLoggedIn={!!user} />
           <button onClick={() => setOpen(!open)} className="text-gray-700 focus:outline-none">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

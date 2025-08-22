@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { accountService, AccountData } from '../services/accountService';
 import { Payment } from '../services/databaseService';
@@ -27,6 +28,8 @@ const AccountPage: React.FC = () => {
   // State for sub-page navigation
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
 
+  const navigate = useNavigate();
+
   // Navigation handlers
   const handlePurchaseHistoryClick = () => {
     setShowPurchaseHistory(true);
@@ -34,6 +37,20 @@ const AccountPage: React.FC = () => {
 
   const handleBackFromPurchaseHistory = () => {
     setShowPurchaseHistory(false);
+  };
+
+  const handleExploreWorkshops = () => {
+    navigate('/');
+    // Use setTimeout to ensure navigation completes before scrolling
+    setTimeout(() => {
+      const offeringsSection = document.getElementById('offerings');
+      if (offeringsSection) {
+        offeringsSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -361,12 +378,12 @@ const AccountPage: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No Enrollments Yet</h3>
                   <p className="text-gray-500 mb-6">Start your learning journey by enrolling in our AI workshops.</p>
-                  <a
-                    href="/"
+                  <button
+                    onClick={handleExploreWorkshops}
                     className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105 shadow-lg"
                   >
                     Explore Workshops
-                  </a>
+                  </button>
                 </div>
               )}
             </div>

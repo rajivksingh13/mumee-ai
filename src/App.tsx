@@ -285,7 +285,7 @@ const Home = () => {
       </section>
 
       {/* Workshops & Offerings Section */}
-      <section className="py-8 sm:py-16 bg-white">
+      <section id="offerings" className="py-8 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-12 px-4">
