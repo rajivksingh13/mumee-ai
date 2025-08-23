@@ -284,6 +284,380 @@ const Home = () => {
               </div>
       </section>
 
+      {/* Scrolling Logos Section */}
+      <section className="py-10 bg-white border-b border-gray-100">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h3 className="text-3xl font-bold text-gray-800 mb-3"><span className="text-pink-500">AI</span> Tools & Technologies</h3>
+            <p className="text-lg text-gray-400 font-medium">Cutting-edge AI platforms and development tools</p>
+          </div>
+          
+          {/* Scrolling Logos Container */}
+          <div className="relative overflow-hidden h-36">
+            <div className="flex animate-scroll space-x-10 items-center">
+              {/* First set of logos */}
+              <div className="flex space-x-10 items-center min-w-max">
+                {/* GitHub */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-github-logo-100.svg" alt="GitHub" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">GitHub</span>
+                </div>
+                
+                {/* ChatGPT */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-chatgpt-100.svg" alt="ChatGPT" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">ChatGPT</span>
+                </div>
+                
+                {/* Claude AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-claude-ai-100.svg" alt="Claude AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Claude AI</span>
+                </div>
+                
+                {/* Gemini AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-gemini-ai-100.svg" alt="Gemini AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Gemini AI</span>
+                </div>
+                
+                {/* Grok */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-grok-100.svg" alt="Grok" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Grok</span>
+                </div>
+                
+                {/* Anthropic */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-anthropic-100.svg" alt="Anthropic" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Anthropic</span>
+                </div>
+                
+                {/* DeepSeek */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-deepseek-100.svg" alt="DeepSeek" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">DeepSeek</span>
+                </div>
+                
+                {/* Cursor AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-cursor-ai-100.svg" alt="Cursor AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Cursor AI</span>
+                </div>
+
+                {/* GitHub Copilot */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-github-copilot-100.svg" alt="GitHub Copilot" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">GitHub Copilot</span>
+                </div>
+
+                {/* Windows Copilot */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-windows-copilot-100.svg" alt="Windows Copilot" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Windows Copilot</span>
+                </div>
+
+                {/* Google Assistant */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-google-assistant-100.svg" alt="Google Assistant" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Google Assistant</span>
+                </div>
+
+                {/* Perplexity AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-perplexity-ai-100.svg" alt="Perplexity AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Perplexity AI</span>
+                </div>
+
+                {/* Replit */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-replit-100.svg" alt="Replit" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Replit</span>
+                </div>
+
+                {/* Python */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-python-100.svg" alt="Python" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Python</span>
+                </div>
+
+                {/* Java */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-java-100.svg" alt="Java" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Java</span>
+                </div>
+
+                {/* VS Code */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-visual-studio-code-2019-100.svg" alt="VS Code" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">VS Code</span>
+                </div>
+
+
+                {/* IntelliJ IDEA */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-intellij-idea-100.svg" alt="IntelliJ IDEA" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">IntelliJ IDEA</span>
+                </div>
+
+                {/* Docker */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-docker-100.svg" alt="Docker" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Docker</span>
+                </div>
+
+                {/* Kubernetes */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-kubernetes-100.svg" alt="Kubernetes" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Kubernetes</span>
+                </div>
+
+                {/* Apache Kafka */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-apache-kafka-100.svg" alt="Apache Kafka" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Apache Kafka</span>
+                </div>
+
+                {/* MCP */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/mcp.svg" alt="MCP" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">MCP</span>
+                </div>
+
+                {/* NANONETS */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/nanonets.svg" alt="NANONETS" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">NANONETS</span>
+                </div>
+              </div>
+              
+              {/* Duplicate set for seamless scrolling */}
+              <div className="flex space-x-10 items-center min-w-max">
+                {/* GitHub */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-github-logo-100.svg" alt="GitHub" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">GitHub</span>
+                </div>
+                
+                {/* ChatGPT */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-chatgpt-100.svg" alt="ChatGPT" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">ChatGPT</span>
+                </div>
+                
+                {/* Claude AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-claude-ai-100.svg" alt="Claude AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Claude AI</span>
+                </div>
+                
+                {/* Gemini AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-gemini-ai-100.svg" alt="Gemini AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Gemini AI</span>
+                </div>
+                
+                {/* Grok */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-grok-100.svg" alt="Grok" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Grok</span>
+                </div>
+                
+                {/* Anthropic */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-anthropic-100.svg" alt="Anthropic" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Anthropic</span>
+                </div>
+                
+                {/* DeepSeek */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-deepseek-100.svg" alt="DeepSeek" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">DeepSeek</span>
+                </div>
+                
+                {/* Cursor AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-cursor-ai-100.svg" alt="Cursor AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Cursor AI</span>
+                </div>
+
+                {/* GitHub Copilot */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-github-copilot-100.svg" alt="GitHub Copilot" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">GitHub Copilot</span>
+                </div>
+
+                {/* Windows Copilot */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-windows-copilot-100.svg" alt="Windows Copilot" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Windows Copilot</span>
+                </div>
+
+                {/* Google Assistant */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-google-assistant-100.svg" alt="Google Assistant" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Google Assistant</span>
+                </div>
+
+                {/* Perplexity AI */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-perplexity-ai-100.svg" alt="Perplexity AI" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Perplexity AI</span>
+                </div>
+
+                {/* Replit */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-replit-100.svg" alt="Replit" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Replit</span>
+                </div>
+
+                {/* Python */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-python-100.svg" alt="Python" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Python</span>
+                </div>
+
+                {/* Java */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-java-100.svg" alt="Java" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Java</span>
+                </div>
+
+                {/* VS Code */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-visual-studio-code-2019-100.svg" alt="VS Code" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">VS Code</span>
+                </div>
+
+                {/* IntelliJ IDEA */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-intellij-idea-100.svg" alt="IntelliJ IDEA" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">IntelliJ IDEA</span>
+                </div>
+
+                {/* Docker */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-docker-100.svg" alt="Docker" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Docker</span>
+                </div>
+
+                {/* Kubernetes */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-kubernetes-100.svg" alt="Kubernetes" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Kubernetes</span>
+                </div>
+
+                {/* Apache Kafka */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/icons8-apache-kafka-100.svg" alt="Apache Kafka" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Apache Kafka</span>
+                </div>
+
+                {/* MCP */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/mcp.svg" alt="MCP" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">MCP</span>
+                </div>
+
+                {/* NANONETS */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200 p-3">
+                    <img src="/logos/nanonets.svg" alt="NANONETS" className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">NANONETS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Workshops & Offerings Section */}
       <section id="offerings" className="py-8 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

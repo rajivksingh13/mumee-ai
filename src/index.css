@@ -40,4 +40,38 @@ body {
   * {
     box-sizing: border-box;
   }
+}
+
+/* Scrolling animation for logos */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 45s linear infinite;
+}
+
+/* Pause animation on hover */
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Optimize logo sizes for better visibility */
+.animate-scroll .w-16 {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.animate-scroll .w-10 {
+  width: 2rem;
+  height: 2rem;
+}
+
+.animate-scroll .p-3 {
+  padding: 0.5rem;
 } 
