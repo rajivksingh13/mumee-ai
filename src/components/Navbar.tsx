@@ -40,6 +40,7 @@ const techBlogs = [
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState(false);
+  const [mobileExploreOpen, setMobileExploreOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -81,6 +82,7 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     setDropdown(false);
     setUserMenuOpen(false);
+    setMobileExploreOpen(false);
     setOpen(false);
   }, [location]);
 
@@ -366,42 +368,79 @@ const Navbar: React.FC = () => {
           </div>
           <Link to="/" className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>Home</Link>
           <Link to="/titlihub" className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>titliHub</Link>
+          
+          {/* Mobile Explore Dropdown */}
           <div className="block">
-            <div className="text-gray-700 px-3 py-2 text-base font-medium font-semibold">Explore</div>
-            <div className="pl-2">
-              {/* AI Workshops Section */}
-              <div className="mb-3">
-                <div className="text-gray-900 px-3 py-2 text-sm font-semibold">AI Workshops</div>
-                {offerings.map(link => (
-                  <Link key={link.to} to={link.to} className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium" onClick={() => setOpen(false)}>
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-              
-              {/* Mobile Tech Blogs Section */}
-              <div className="border-t border-gray-200 pt-2">
-                <div className="text-gray-900 px-3 py-2 text-sm font-semibold">Tech Blogs</div>
-                {techBlogs.map(blog => (
-                  <a
-                    key={blog.name}
-                    href={blog.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <span className="mr-2">{blog.icon}</span>
-                      <div>
-                        <div>{blog.name}</div>
-                        <div className="text-xs text-gray-500">{blog.description}</div>
+            <button
+              onClick={() => setMobileExploreOpen(!mobileExploreOpen)}
+              className="w-full text-left text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium font-semibold flex items-center justify-between"
+            >
+              Explore
+              <svg 
+                className={`w-4 h-4 transition-transform ${mobileExploreOpen ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {mobileExploreOpen && (
+              <div className="pl-2 border-l-2 border-gray-200 ml-2">
+                {/* AI Workshops Section */}
+                <div className="mb-3">
+                  <div className="text-gray-900 px-3 py-2 text-sm font-semibold">AI Workshops</div>
+                  {offerings.filter(link => link.category === 'AI Workshops').map(link => (
+                    <Link key={link.to} to={link.to} className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium" onClick={() => setOpen(false)}>
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+                
+                {/* AI Consultant Section */}
+                <div className="mb-3">
+                  <div className="text-gray-900 px-3 py-2 text-sm font-semibold">AI Consultant</div>
+                  {offerings.filter(link => link.category === 'AI Consultant').map(link => (
+                    <Link key={link.to} to={link.to} className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium" onClick={() => setOpen(false)}>
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+                
+                {/* AI Services Section */}
+                <div className="mb-3">
+                  <div className="text-gray-900 px-3 py-2 text-sm font-semibold">AI Services</div>
+                  {offerings.filter(link => link.category === 'AI Services').map(link => (
+                    <Link key={link.to} to={link.to} className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium" onClick={() => setOpen(false)}>
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+                
+                {/* Mobile Tech Blogs Section */}
+                <div className="border-t border-gray-200 pt-2">
+                  <div className="text-gray-900 px-3 py-2 text-sm font-semibold">Tech Blogs</div>
+                  {techBlogs.map(blog => (
+                    <a
+                      key={blog.name}
+                      href={blog.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                      onClick={() => setOpen(false)}
+                    >
+                      <div className="flex items-center">
+                        <span className="mr-2">{blog.icon}</span>
+                        <div>
+                          <div>{blog.name}</div>
+                          <div className="text-xs text-gray-500">{blog.description}</div>
+                        </div>
                       </div>
-                    </div>
-                  </a>
-                ))}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           {user ? (
             <div className="mt-2 space-y-2">

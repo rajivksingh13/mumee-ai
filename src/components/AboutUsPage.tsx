@@ -4,7 +4,7 @@ const AboutUsPage: React.FC = () => {
   const foundingMembers = [
     {
       name: "Basant Singh",
-      role: "Co-Founder & CEO",
+      role: "",
       linkedin: "https://www.linkedin.com/in/basantsingh/",
       description: "Technology leader with expertise in AI/ML, cloud computing, and digital transformation.",
       expertise: ["AI/ML Strategy", "Cloud Architecture", "Digital Transformation"],
@@ -12,7 +12,7 @@ const AboutUsPage: React.FC = () => {
     },
     {
       name: "Rajiv Kumar",
-      role: "Co-Founder & CTO",
+      role: "",
       linkedin: "https://www.linkedin.com/in/rajiv-kumar-6b468a8a/",
       description: "Technology visionary with deep expertise in AI, ML, and software engineering.",
       expertise: ["Artificial Intelligence", "Machine Learning", "Software Engineering"],
@@ -20,7 +20,7 @@ const AboutUsPage: React.FC = () => {
     },
     {
       name: "Sanjeev Kumar",
-      role: "Co-Founder & Head of Operations",
+      role: "",
       linkedin: "https://www.linkedin.com/in/sanjeev-kumar-19584916/",
       description: "Operations expert with extensive experience in business strategy and process optimization.",
       expertise: ["Business Strategy", "Operations Management", "Process Optimization"],
@@ -28,7 +28,7 @@ const AboutUsPage: React.FC = () => {
     },
     {
       name: "Sanjay Singh",
-      role: "Co-Founder & Head of Business Development",
+      role: "",
       linkedin: "https://www.linkedin.com/in/sanjay-singh19/",
       description: "Business development leader with a proven track record in scaling technology companies.",
       expertise: ["Business Development", "Partnerships", "Market Strategy"],
