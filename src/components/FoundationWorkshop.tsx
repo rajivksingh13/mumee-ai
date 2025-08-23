@@ -368,7 +368,7 @@ const FoundationWorkshop: React.FC = () => {
                     <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-gray-600">Self-paced</span>
+                    <span className="text-gray-600">Workshop</span>
                   </div>
                   <div className="flex items-center">
                     <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,13 +380,13 @@ const FoundationWorkshop: React.FC = () => {
 
                 {/* Instructor Info */}
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                  {/* <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
                     AI
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Taught by</p>
                     <p className="font-semibold text-gray-900">titliAI Expert Team</p>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -408,9 +408,9 @@ const FoundationWorkshop: React.FC = () => {
                       >
                         {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
                       </button>
-                      <p className="text-sm text-gray-500 mt-3 text-center">
+                      {/* <p className="text-sm text-gray-500 mt-3 text-center">
                         Get instant access to all workshop materials
-                      </p>
+                      </p> */}
                     </>
                   ) : (
                     <div className="text-center">
@@ -454,7 +454,7 @@ const FoundationWorkshop: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Duration</h3>
-                    <p className="text-gray-600">{workshop?.duration || 12} hours of self-paced learning</p>
+                    <p className="text-gray-600">{workshop?.duration || 12} hours</p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Level</h3>
@@ -462,7 +462,7 @@ const FoundationWorkshop: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Format</h3>
-                    <p className="text-gray-600">Video lessons, interactive exercises, and projects</p>
+                    <p className="text-gray-600">Workshop</p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Certificate</h3>
@@ -661,7 +661,7 @@ const FoundationWorkshop: React.FC = () => {
               </div>
 
               {/* Course Format */}
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mt-8">
+              {/* <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mt-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Format</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex items-start">
@@ -701,7 +701,7 @@ const FoundationWorkshop: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
                       {/* Right Column - Sidebar */}
@@ -729,7 +729,7 @@ const FoundationWorkshop: React.FC = () => {
                 </div>
 
                 {/* Course Features */}
-                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                {/* <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">This course includes</h3>
                   <ul className="space-y-3">
                     <li className="flex items-center">
@@ -769,7 +769,7 @@ const FoundationWorkshop: React.FC = () => {
                       <span className="text-gray-700">Community support</span>
                     </li>
                   </ul>
-                </div>
+                </div> */}
 
                 {/* Requirements */}
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
