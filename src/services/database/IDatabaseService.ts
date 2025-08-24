@@ -63,6 +63,18 @@ export interface Workshop {
   featured: boolean;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
+  
+  // Live session properties
+  isLiveSession?: boolean;
+  scheduledDate?: string; // ISO date string
+  scheduledTime?: string; // HH:MM format
+  timezone?: string;
+  meetingLink?: string;
+  meetingId?: string;
+  meetingPassword?: string;
+  sessionDuration?: number; // in minutes
+  maxParticipants?: number;
+  
   overview: {
     duration: number;
     level: string;
