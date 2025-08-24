@@ -8,7 +8,7 @@ const searchData = [
   { id: 2, title: 'titliHub', type: 'Page', path: '/titlihub', description: 'Central hub for all titliAI resources and tools' },
   
   // AI Workshops - All Levels
-  { id: 3, title: 'AI Workshops', type: 'Offering', path: '/workshops', description: 'Hands-on AI workshops for all levels' },
+  { id: 3, title: 'AI Workshops', type: 'Offering', path: '/workshops/beginner', description: 'Hands-on AI workshops for all levels' },
   { id: 4, title: 'Absolute Beginner', type: 'Workshop', path: '/workshops/beginner', description: 'Start your AI journey from scratch - no prior experience needed' },
   { id: 5, title: 'Foundation Level', type: 'Workshop', path: '/workshops/foundation', description: 'Learn the fundamentals of AI and machine learning' },
   { id: 6, title: 'Advance Level', type: 'Workshop', path: '/workshops/advance', description: 'Advanced AI concepts and practical applications' },
@@ -23,16 +23,16 @@ const searchData = [
   { id: 13, title: 'AI Blogs', type: 'Offering', path: '/blogs', description: 'Stay updated with AI trends' },
   
   // AI Topics & Skills
-  { id: 14, title: 'Machine Learning', type: 'Topic', path: '/workshops', description: 'Learn machine learning fundamentals' },
-  { id: 15, title: 'Deep Learning', type: 'Topic', path: '/workshops', description: 'Advanced neural networks and deep learning' },
-  { id: 16, title: 'Natural Language Processing', type: 'Topic', path: '/workshops', description: 'AI for text and language understanding' },
-  { id: 17, title: 'Computer Vision', type: 'Topic', path: '/workshops', description: 'AI for image and video analysis' },
-  { id: 18, title: 'Data Science', type: 'Topic', path: '/workshops', description: 'Data analysis and visualization with AI' },
-  { id: 19, title: 'Prompt Engineering', type: 'Topic', path: '/workshops', description: 'Master the art of AI prompt design' },
-  { id: 20, title: 'Artificial Intelligence', type: 'Topic', path: '/workshops', description: 'Comprehensive AI learning and applications' },
-  { id: 21, title: 'Neural Networks', type: 'Topic', path: '/workshops', description: 'Understanding and building neural networks' },
-  { id: 22, title: 'AI Ethics', type: 'Topic', path: '/workshops', description: 'Ethical considerations in AI development' },
-  { id: 23, title: 'AI Tools', type: 'Topic', path: '/workshops', description: 'Practical AI tools and frameworks' },
+  { id: 14, title: 'Machine Learning', type: 'Topic', path: '/workshops/foundation', description: 'Learn machine learning fundamentals' },
+  { id: 15, title: 'Deep Learning', type: 'Topic', path: '/workshops/advance', description: 'Advanced neural networks and deep learning' },
+  { id: 16, title: 'Natural Language Processing', type: 'Topic', path: '/workshops/foundation', description: 'AI for text and language understanding' },
+  { id: 17, title: 'Computer Vision', type: 'Topic', path: '/workshops/foundation', description: 'AI for image and video analysis' },
+  { id: 18, title: 'Data Science', type: 'Topic', path: '/workshops/foundation', description: 'Data analysis and visualization with AI' },
+  { id: 19, title: 'Prompt Engineering', type: 'Topic', path: '/workshops/beginner', description: 'Master the art of AI prompt design' },
+  { id: 20, title: 'Artificial Intelligence', type: 'Topic', path: '/workshops/foundation', description: 'Comprehensive AI learning and applications' },
+  { id: 21, title: 'Neural Networks', type: 'Topic', path: '/workshops/advance', description: 'Understanding and building neural networks' },
+  { id: 22, title: 'AI Ethics', type: 'Topic', path: '/workshops/foundation', description: 'Ethical considerations in AI development' },
+  { id: 23, title: 'AI Tools', type: 'Topic', path: '/workshops/beginner', description: 'Practical AI tools and frameworks' },
   
   // User Account & Features
   { id: 24, title: 'My Account', type: 'Page', path: '/account', description: 'Manage your titliAI account and preferences' },
@@ -55,10 +55,10 @@ const searchData = [
   { id: 35, title: 'AI Chat', type: 'Feature', path: '/titlihub', description: 'Chat with AI for learning assistance and support' },
   
   // Additional AI Concepts
-  { id: 36, title: 'Generative AI', type: 'Topic', path: '/workshops', description: 'Create content with AI - text, images, and more' },
-  { id: 37, title: 'AI Applications', type: 'Topic', path: '/workshops', description: 'Real-world AI applications and use cases' },
-  { id: 38, title: 'AI Development', type: 'Topic', path: '/workshops', description: 'Learn to develop AI applications and systems' },
-  { id: 39, title: 'AI Business', type: 'Topic', path: '/workshops', description: 'AI for business strategy and implementation' },
+  { id: 36, title: 'Generative AI', type: 'Topic', path: '/workshops/beginner', description: 'Create content with AI - text, images, and more' },
+  { id: 37, title: 'AI Applications', type: 'Topic', path: '/workshops/foundation', description: 'Real-world AI applications and use cases' },
+  { id: 38, title: 'AI Development', type: 'Topic', path: '/workshops/advance', description: 'Learn to develop AI applications and systems' },
+  { id: 39, title: 'AI Business', type: 'Topic', path: '/workshops/foundation', description: 'AI for business strategy and implementation' },
 ];
 
 interface SearchResult {
@@ -190,6 +190,19 @@ const SearchBar: React.FC = () => {
         />
         <button
           type="button"
+          onClick={() => {
+            if (query.trim() !== '') {
+              if (results.length > 0) {
+                // Navigate to the first result
+                handleResultClick(results[0]);
+              } else {
+                // No results found, navigate to home page
+                navigate('/');
+                setQuery('');
+                setIsOpen(false);
+              }
+            }
+          }}
           className="absolute inset-y-0 right-0 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full w-8 h-8 transition-colors"
           style={{ right: '4px', top: '50%', transform: 'translateY(-50%)' }}
           title="Search"
@@ -255,9 +268,19 @@ const SearchBar: React.FC = () => {
           <div className="px-4 py-6 text-center">
             <div className="text-gray-400 text-lg mb-2">🔍</div>
             <p className="text-gray-900 font-medium">No results found</p>
-            <p className="text-gray-600 text-sm mt-1">
+            <p className="text-gray-600 text-sm mt-1 mb-3">
               Try searching for workshops, offerings, or topics
             </p>
+            <button
+              onClick={() => {
+                navigate('/');
+                setQuery('');
+                setIsOpen(false);
+              }}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+            >
+              Go to Home Page
+            </button>
           </div>
         </div>
       )}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 
 // Extended search data with more details
 const searchData = [
-  { id: 1, title: 'AI Workshops', type: 'Offering', path: '/workshops', description: 'Hands-on AI workshops for all levels', level: 'All Levels', duration: '1-3 Months', category: 'Workshops' },
+  { id: 1, title: 'AI Workshops', type: 'Offering', path: '/workshops/beginner', description: 'Hands-on AI workshops for all levels', level: 'All Levels', duration: '1-3 Months', category: 'Workshops' },
   { id: 2, title: 'Foundation Workshop', type: 'Workshop', path: '/workshops/foundation', description: 'Learn the fundamentals of AI and machine learning', level: 'Beginner', duration: '1-3 Months', category: 'Workshops' },
   { id: 3, title: 'AI Consultant', type: 'Offering', path: '/consultant', description: 'Expert AI consulting for your business', level: 'All Levels', duration: 'Ongoing', category: 'Services' },
   { id: 4, title: 'AI Library', type: 'Offering', path: '/library', description: 'GenAI books & AI-generated comics', level: 'All Levels', duration: 'Self-paced', category: 'Resources' },
@@ -12,12 +12,12 @@ const searchData = [
   { id: 7, title: 'AI Training', type: 'Offering', path: '/training', description: 'AI training programs for upskilling', level: 'All Levels', duration: '1-6 Months', category: 'Training' },
   { id: 8, title: 'AI Certifications', type: 'Offering', path: '/certifications', description: 'Get certified in AI technologies', level: 'All Levels', duration: '3-6 Months', category: 'Certifications' },
   { id: 9, title: 'AI Blogs', type: 'Offering', path: '/blogs', description: 'Stay updated with AI trends', level: 'All Levels', duration: 'Ongoing', category: 'Resources' },
-  { id: 10, title: 'Machine Learning', type: 'Topic', path: '/workshops', description: 'Learn machine learning fundamentals', level: 'Beginner', duration: '1-3 Months', category: 'Topics' },
-  { id: 11, title: 'Deep Learning', type: 'Topic', path: '/workshops', description: 'Advanced neural networks and deep learning', level: 'Advanced', duration: '3-6 Months', category: 'Topics' },
-  { id: 12, title: 'Natural Language Processing', type: 'Topic', path: '/workshops', description: 'AI for text and language understanding', level: 'Intermediate', duration: '1-3 Months', category: 'Topics' },
-  { id: 13, title: 'Computer Vision', type: 'Topic', path: '/workshops', description: 'AI for image and video analysis', level: 'Intermediate', duration: '1-3 Months', category: 'Topics' },
-  { id: 14, title: 'Data Science', type: 'Topic', path: '/workshops', description: 'Data analysis and visualization with AI', level: 'Beginner', duration: '1-3 Months', category: 'Topics' },
-  { id: 15, title: 'Prompt Engineering', type: 'Topic', path: '/workshops', description: 'Master the art of AI prompt design', level: 'All Levels', duration: '1-4 Weeks', category: 'Topics' },
+  { id: 10, title: 'Machine Learning', type: 'Topic', path: '/workshops/foundation', description: 'Learn machine learning fundamentals', level: 'Beginner', duration: '1-3 Months', category: 'Topics' },
+  { id: 11, title: 'Deep Learning', type: 'Topic', path: '/workshops/advance', description: 'Advanced neural networks and deep learning', level: 'Advanced', duration: '3-6 Months', category: 'Topics' },
+  { id: 12, title: 'Natural Language Processing', type: 'Topic', path: '/workshops/foundation', description: 'AI for text and language understanding', level: 'Intermediate', duration: '1-3 Months', category: 'Topics' },
+  { id: 13, title: 'Computer Vision', type: 'Topic', path: '/workshops/foundation', description: 'AI for image and video analysis', level: 'Intermediate', duration: '1-3 Months', category: 'Topics' },
+  { id: 14, title: 'Data Science', type: 'Topic', path: '/workshops/foundation', description: 'Data analysis and visualization with AI', level: 'Beginner', duration: '1-3 Months', category: 'Topics' },
+  { id: 15, title: 'Prompt Engineering', type: 'Topic', path: '/workshops/beginner', description: 'Master the art of AI prompt design', level: 'All Levels', duration: '1-4 Weeks', category: 'Topics' },
 ];
 
 const categories = ['All', 'Workshops', 'Services', 'Resources', 'Marketplace', 'Training', 'Certifications', 'Topics'];
@@ -42,6 +42,7 @@ const SearchPage: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState(searchParams.get('level') || 'All Levels');
   const [selectedDuration, setSelectedDuration] = useState(searchParams.get('duration') || 'All Durations');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const navigate = useNavigate();
 
   // Update URL params when filters change
   useEffect(() => {
@@ -232,9 +233,15 @@ const SearchPage: React.FC = () => {
                     setSelectedLevel('All Levels');
                     setSelectedDuration('All Durations');
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg mr-3"
                 >
                   Clear filters
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
+                >
+                  Go to Home
                 </button>
               </div>
             ) : (

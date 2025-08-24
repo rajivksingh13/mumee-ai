@@ -13,6 +13,7 @@ body {
 @layer base {
   body {
     @apply bg-gray-50;
+    padding-top: 4rem; /* 64px to account for fixed navbar */
   }
 }
 

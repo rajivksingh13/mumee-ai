@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
 import { useAuth } from './contexts/AuthContext';
 import { auth } from './config/firebase';
 
@@ -915,11 +916,15 @@ const App: React.FC = () => {
         <Route path="/student-corner" element={<StudentCorner />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/payments" element={<PaymentDetailsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/enrollment-dashboard" element={<Navigate to="/account" replace />} />
+        
+        {/* Catch-all route for non-existent paths */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Footer />
       <ChatWidget />

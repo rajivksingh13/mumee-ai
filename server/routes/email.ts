@@ -294,7 +294,7 @@ router.post('/welcome', async (req, res) => {
             </ul>
             <p>Ready to get started? Click below to visit your dashboard and begin your AI journey:</p>
             <div style="text-align: center;">
-              <a href="https://mumee-ai.web.app/" class="button">Go to titliAI</a>
+              <a href="https://titliai.com/" class="button">Go to titliAI</a>
             </div>
             <div class="tips">
               <h3>Getting Started Tips</h3>
@@ -309,7 +309,7 @@ router.post('/welcome', async (req, res) => {
             <div class="footer">
               <p>Best regards,<br><strong>The titliAI Team</strong></p>
               <p>This is an automated message, please do not reply directly to this email.</p>
-              <p>To unsubscribe, click here: <a href="https://mumee-ai.web.app/unsubscribe">Unsubscribe</a></p>
+              <p>To unsubscribe, click here: <a href="https://titliai.com/unsubscribe">Unsubscribe</a></p>
             </div>
           </div>
         </body>
@@ -461,7 +461,7 @@ router.post('/enrollment', async (req, res) => {
             <div class="footer">
               <p>Best regards,<br><strong>The titliAI Team</strong></p>
               <p>This is an automated message, please do not reply directly to this email.</p>
-              <p>To unsubscribe, click here: <a href="https://mumee-ai.web.app/unsubscribe">Unsubscribe</a></p>
+              <p>To unsubscribe, click here: <a href="https://titliai.com/unsubscribe">Unsubscribe</a></p>
             </div>
           </div>
         </body>
@@ -474,6 +474,52 @@ router.post('/enrollment', async (req, res) => {
     console.error('Error sending enrollment email:', error);
     res.status(500).json({ 
       error: 'Failed to send enrollment email',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Live session notification endpoint
+router.post('/live-session-notification', async (req, res) => {
+  try {
+    const { 
+      to, 
+      subject, 
+      html, 
+      workshopId, 
+      enrollmentId, 
+      notificationType 
+    } = req.body;
+
+    if (!to || !subject || !html) {
+      return res.status(400).json({ error: 'Missing required fields: to, subject, html' });
+    }
+
+    // Validate email format
+    if (!validateEmail(to)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    const provider = getEmailProvider(to);
+    console.log(`📧 Sending live session notification to: ${to} (Provider: ${provider})`);
+
+    // Send the email
+    const result = await sendEmail(to, subject, html);
+    
+    res.json({ 
+      success: true,
+      message: 'Live session notification sent successfully',
+      emailId: result.id,
+      provider,
+      isSupported: isSupportedProvider(to),
+      notificationType,
+      workshopId,
+      enrollmentId
+    });
+  } catch (error) {
+    console.error('Error sending live session notification:', error);
+    res.status(500).json({ 
+      error: 'Failed to send live session notification',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

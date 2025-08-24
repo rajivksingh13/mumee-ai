@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FirestoreService } from '../services/database/FirestoreService';
 import { User, Workshop, Enrollment, Payment } from '../services/database/IDatabaseService';
 import { Timestamp } from 'firebase/firestore';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 
 const AdminPage: React.FC = () => {
@@ -22,6 +22,189 @@ const AdminPage: React.FC = () => {
 
   // Simple admin password - in production, this should be stored securely
   const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'titliAI2025!';
+
+  // Function to set workshop scheduled date
+  const setWorkshopDate = async (workshopId: string) => {
+    try {
+      const workshop = workshops.find(w => w.id === workshopId);
+      if (!workshop) {
+        alert('Workshop not found');
+        return;
+      }
+
+      // Get current date and time for default values
+      const now = new Date();
+      const defaultDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      // Prompt for date and time
+      const scheduledDate = prompt(`Set scheduled date for "${workshop.title}" (YYYY-MM-DD):`, defaultDate);
+      if (!scheduledDate) return;
+
+      const scheduledTime = prompt(`Set scheduled time (HH:MM):`, defaultTime);
+      if (!scheduledTime) return;
+
+      const timezone = prompt(`Set timezone (e.g., Asia/Kolkata):`, 'Asia/Kolkata');
+      if (!timezone) return;
+
+      const sessionDuration = prompt(`Set session duration in minutes:`, '120');
+      if (!sessionDuration) return;
+
+      // Validate date format
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) {
+        alert('Invalid date format. Please use YYYY-MM-DD');
+        return;
+      }
+
+      // Validate time format
+      if (!/^\d{2}:\d{2}$/.test(scheduledTime)) {
+        alert('Invalid time format. Please use HH:MM');
+        return;
+      }
+
+      // Update workshop in Firestore
+      const workshopRef = doc(firestore, 'workshops', workshopId);
+      await updateDoc(workshopRef, {
+        scheduledDate: scheduledDate,
+        scheduledTime: scheduledTime,
+        timezone: timezone,
+        sessionDuration: parseInt(sessionDuration),
+        updatedAt: new Date()
+      });
+
+      alert(`✅ Scheduled date set for "${workshop.title}": ${scheduledDate} at ${scheduledTime} (${timezone})`);
+      
+      // Refresh workshops data
+      const updatedWorkshops = await dbService.getWorkshops();
+      setWorkshops(updatedWorkshops);
+
+    } catch (error) {
+      console.error('Error setting workshop date:', error);
+      alert(`Error setting date: ${error}`);
+    }
+  };
+
+  // Simple live session notification function
+  const sendLiveSessionNotification = async (enrollmentId: string, userEmail: string, userName: string, workshop: Workshop) => {
+    try {
+      if (!workshop.isLiveSession || !workshop.scheduledDate) {
+        alert('This workshop is not configured as a live session');
+        return;
+      }
+
+      // Show confirmation dialog
+      const confirmMessage = `Send live session reminder to ${userName} (${userEmail}) for "${workshop.title}"?`;
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      // Generate simple email HTML
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Live Workshop Reminder - ${workshop.title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #222; background-color: #f4f6fa; margin: 0; padding: 0; }
+              .container { background-color: #fff; padding: 32px 24px; border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); max-width: 600px; margin: 40px auto; border: 1px solid #e5e7eb; }
+              .header { text-align: center; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid #3b82f6; }
+              .logo { font-size: 2.2em; font-weight: bold; color: #3b82f6; margin: 0; letter-spacing: 1px; }
+              .join-button { display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff !important; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: 600; font-size: 1.1em; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1 class="logo">🦋 titliAI</h1>
+                <p style="color: #64748b; margin-top: 6px;">Live Workshop Reminder</p>
+              </div>
+              
+              <h2 style="color: #1e40af; margin-bottom: 16px;">Hello ${userName}!</h2>
+              
+              <p>Your live workshop session is starting soon! We're excited to have you join us for an interactive learning experience.</p>
+              
+              <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+                <h3 style="color: #1e40af; margin-top: 0;">📚 Workshop Details</h3>
+                <p><strong>Workshop:</strong> ${workshop.title}</p>
+                <p><strong>Date:</strong> ${workshop.scheduledDate}</p>
+                <p><strong>Time:</strong> ${workshop.scheduledTime || 'TBD'} (${workshop.timezone || 'IST'})</p>
+                <p><strong>Duration:</strong> ${workshop.sessionDuration || 120} minutes</p>
+                <p><strong>Description:</strong> ${workshop.description}</p>
+              </div>
+              
+              ${workshop.meetingLink ? `
+              <div style="background-color: #e0e7ff; padding: 16px; border-radius: 6px; margin: 16px 0; border: 1px solid #c7d2fe;">
+                <h4 style="color: #3730a3; margin-top: 0;">🔗 Meeting Information</h4>
+                <p><strong>Meeting ID:</strong> ${workshop.meetingId || 'TBD'}</p>
+                <p><strong>Password:</strong> ${workshop.meetingPassword || 'TBD'}</p>
+                <p><strong>Direct Link:</strong> <a href="${workshop.meetingLink}" style="color: #3b82f6;">Click here to join</a></p>
+              </div>
+              ` : ''}
+              
+              <p><strong>Please join 5-10 minutes before the scheduled time to ensure everything is working properly.</strong></p>
+              
+              ${workshop.meetingLink ? `
+              <div style="text-align: center;">
+                <a href="${workshop.meetingLink}" class="join-button">🎥 Join Live Workshop</a>
+              </div>
+              ` : ''}
+              
+              <div style="background-color: #f0f9ff; padding: 16px; border-radius: 6px; margin: 20px 0; border: 1px solid #bae6fd;">
+                <h4 style="color: #0369a1; margin-top: 0;">📋 Preparation Checklist</h4>
+                <ul style="color: #0369a1; margin: 8px 0;">
+                  <li>✅ Test your microphone and camera</li>
+                  <li>✅ Ensure stable internet connection</li>
+                  <li>✅ Have your questions ready</li>
+                  <li>✅ Find a quiet environment</li>
+                </ul>
+              </div>
+              
+              <p>If you have any technical issues or questions, please contact us at <strong>support@titliai.com</strong>.</p>
+              
+              <div style="margin-top: 32px; padding-top: 18px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 13px; color: #64748b;">
+                <p>Best regards,<br><strong>The titliAI Team</strong></p>
+                <p>This is an automated reminder. Please do not reply to this email.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+
+      // Send email
+      const subject = `🎯 Live Workshop Reminder - ${workshop.title}`;
+      
+      const response = await fetch('/api/email/live-session-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: userEmail,
+          subject: subject,
+          html: html,
+          workshopId: workshop.id,
+          enrollmentId: enrollmentId,
+          notificationType: 'manual'
+        })
+      });
+
+      if (response.ok) {
+        alert(`✅ Live session reminder sent successfully to ${userName} (${userEmail})`);
+        console.log(`✅ Email sent successfully to ${userEmail}`);
+      } else {
+        alert(`❌ Failed to send email to ${userEmail}`);
+        console.error(`❌ Failed to send email to ${userEmail}`);
+      }
+
+    } catch (error) {
+      console.error('Error sending live session notification:', error);
+      alert(`Error sending notification: ${error}`);
+    }
+  };
+
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +305,7 @@ const AdminPage: React.FC = () => {
           setWorkshops(analyticsWorkshops);
           console.log('✅ Analytics data loaded');
           break;
+
       }
     } catch (error) {
       console.error('❌ Error loading data:', error);
@@ -166,6 +350,8 @@ const AdminPage: React.FC = () => {
       data = data.filter(item => 
         JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
       );
+
+
     }
 
     if (filterStatus !== 'all') {
@@ -239,9 +425,14 @@ const AdminPage: React.FC = () => {
     </div>
   );
 
-  const renderEnrollmentsTable = () => (
+  const renderEnrollmentsTable = () => {
+    console.log('🔧 RENDERING ENROLLMENTS TABLE WITH ACTIONS COLUMN');
+    console.log('🔧 Total enrollments:', filteredData().length);
+    console.log('🔧 Workshops with live sessions:', workshops.filter(w => w.isLiveSession).length);
+    
+    return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white/60 border border-blue-100 rounded-lg shadow-lg">
+      <table className="min-w-full bg-white/60 border border-blue-100 rounded-lg shadow-lg" style={{ minWidth: '1200px' }}>
         <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Enrollment ID</th>
@@ -251,6 +442,7 @@ const AdminPage: React.FC = () => {
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Progress</th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Enrolled</th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Payment</th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider bg-red-600 text-white" style={{ border: '2px solid red' }}>🔧 ACTIONS COLUMN</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-blue-100">
@@ -309,13 +501,48 @@ const AdminPage: React.FC = () => {
                     </div>
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 bg-red-100 border-l-4 border-red-500 min-w-[200px]" style={{ border: '3px solid red' }}>
+                  <div className="text-xs">
+                    <div className="font-bold text-yellow-800 mb-1">🔧 ACTIONS COLUMN</div>
+                    <div>Workshop: {workshopName}</div>
+                    <div>Live: {workshop?.isLiveSession ? 'Yes' : 'No'}</div>
+                    <div>Date: {workshop?.scheduledDate || 'None'}</div>
+                    {workshop && workshop.isLiveSession ? (
+                      workshop.scheduledDate ? (
+                        <button
+                          onClick={() => sendLiveSessionNotification(enrollment.id, userEmail, userName, workshop)}
+                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors mt-1 w-full"
+                          title="Send Live Session Reminder"
+                        >
+                          📧 Send Reminder
+                        </button>
+                      ) : (
+                        <div className="space-y-1 mt-1">
+                          <div className="text-xs text-orange-600 font-medium">Live Session - No Date Set</div>
+                          <button
+                            onClick={() => setWorkshopDate(workshop.id)}
+                            className="px-2 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600 transition-colors w-full"
+                            title="Set Scheduled Date"
+                          >
+                            📅 Set Date
+                          </button>
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-xs text-gray-400 mt-1">
+                        {!workshop ? 'No workshop data' : 'Not a live session'}
+                      </div>
+                    )}
+                  </div>
+                </td>
               </tr>
             );
           })}
         </tbody>
       </table>
     </div>
-  );
+    );
+  };
 
   const renderPaymentsTable = () => (
     <div className="overflow-x-auto">
@@ -648,14 +875,32 @@ const AdminPage: React.FC = () => {
           ) : (
             <div>
               {/* Debug Info */}
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="text-sm font-semibold text-blue-800 mb-2">Debug Info:</h3>
-                <div className="text-xs text-blue-700 space-y-1">
-                  <div>Users: {users.length} | Enrollments: {enrollments.length} | Payments: {payments.length} | Workshops: {workshops.length}</div>
-                  <div>Active Tab: {activeTab} | Search: "{searchTerm}" | Filter: {filterStatus}</div>
-                  <div>Filtered Data: {filteredData().length} items</div>
-                </div>
-              </div>
+                             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                 <h3 className="text-sm font-semibold text-blue-800 mb-2">Debug Info:</h3>
+                 <div className="text-xs text-blue-700 space-y-1">
+                   <div>Users: {users.length} | Enrollments: {enrollments.length} | Payments: {payments.length} | Workshops: {workshops.length}</div>
+                   <div>Active Tab: {activeTab} | Search: "{searchTerm}" | Filter: {filterStatus}</div>
+                   <div>Filtered Data: {filteredData().length} items</div>
+                                       {activeTab === 'enrollments' && (
+                      <>
+                        <div>Live Session Workshops: {workshops.filter(w => w.isLiveSession).length}</div>
+                        <div>Workshops with Scheduled Dates: {workshops.filter(w => w.scheduledDate).length}</div>
+                        <div>Live Session Enrollments: {enrollments.filter(e => {
+                          const workshop = workshops.find(w => w.id === e.workshopId);
+                          return workshop && workshop.isLiveSession && workshop.scheduledDate;
+                        }).length}</div>
+                        <div>Live Sessions Ready for Notifications: {enrollments.filter(e => {
+                          const workshop = workshops.find(w => w.id === e.workshopId);
+                          return workshop && workshop.isLiveSession && workshop.scheduledDate;
+                        }).length}</div>
+                        <div>Live Sessions Missing Date: {enrollments.filter(e => {
+                          const workshop = workshops.find(w => w.id === e.workshopId);
+                          return workshop && workshop.isLiveSession && !workshop.scheduledDate;
+                        }).length}</div>
+                      </>
+                    )}
+                 </div>
+               </div>
               
               {activeTab === 'analytics' && renderAnalytics()}
               {activeTab === 'users' && renderUsersTable()}
